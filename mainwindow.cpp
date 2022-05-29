@@ -9,8 +9,4 @@ MainWindow::MainWindow(QWidget *parent)
     m_MainWidget = new CConnectRemoteWidget(this);
 
     setCentralWidget(m_MainWidget);
-
-    CSimpleMetadataServer* server = new CSimpleMetadataServer(this, 31761);
-    CLanMetadataClient* client = new CLanMetadataClient(this, "myuser", QHostAddress::LocalHost, 31761);
-    client->connect();
 }

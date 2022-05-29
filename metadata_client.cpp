@@ -3,6 +3,7 @@
 // ------------------------------------------------------------------------------------------------------------------
 #include "metadata_client.h"
 #include "metadata.h"
+#include "port_discovery.h"
 
 #include <QTcpSocket>
 // ------------------------------------------------------------------------------------------------------------------
@@ -35,6 +36,7 @@ void CLanMetadataClient::joinChannel(QString channel, QString password)
     request.username = username();
 
     writeToSocket(m_Socket, request);
+    qDebug() << "I want to join the channel bro";
 }
 
 void CLanMetadataClient::connect()
@@ -59,26 +61,57 @@ ChannelMetadata CLanMetadataClient::channel(QString name) const
 
 void CLanMetadataClient::onSocketReadyRead()
 {
-    QByteArray data = m_Socket->readAll();
-    QDataStream stream(data);
+    QDataStream stream(m_Socket);
 
     QString action;
-    stream >> action;
-
-    if (action == "identification")
+    while (m_Socket->bytesAvailable() > 0)
     {
-        IdentificationResponse identRes;
-        stream >> identRes;
+        stream >> action;
 
-        qDebug() << "Identification response received: " << static_cast<int>(identRes.code);
+        if (action == "identification")
+        {
+            IdentificationResponse identRes;
+            stream >> identRes;
 
-        if (identRes.code == StatusCode::SUCCESS)
-            emit identificationSuccessful();
+            qDebug() << "Identification response received: " << static_cast<int>(identRes.code);
+
+            if (identRes.code == StatusCode::SUCCESS)
+                emit identificationSuccessful();
+            else
+                emit identificationFailed(identRes.message);
+        }
+        else if (action == "port_discovery")
+        {
+            PortDiscoveryRequest portDisc;
+            stream >> portDisc;
+
+            m_HolePunchClient = new CUdpHolePunchingClient(this, host(), portDisc.discoveryPort, 31313);
+            m_HolePunchClient->start();
+        }
+        else if (action == "connect")
+        {
+            ChannelConnectResponse connResp;
+            stream >> connResp;
+
+            if (connResp.code == StatusCode::SUCCESS)
+            {
+
+            }
+        }
+        else if (action == "client_joined")
+        {
+            ClientJoinedChannelNotification noti;
+            stream >> noti;
+
+            if (noti.username != username())
+                qDebug() << "New Client joined: " << noti.username;
+            else
+                qDebug() << "Server notified me that I joined, ignoring...";
+        }
         else
-            emit identificationFailed(identRes.message);
-    } else if (action == "port_discovery")
-    {
-
+        {
+            qDebug() << "??????";
+        }
     }
 }
 

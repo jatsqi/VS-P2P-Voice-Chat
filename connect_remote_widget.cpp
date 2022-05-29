@@ -1,4 +1,7 @@
 #include "connect_remote_widget.h"
+#include "port_discovery.h"
+#include "metadata_server.h"
+#include "metadata_client.h"
 
 #include <QVBoxLayout>
 #include <QPushButton>
@@ -10,6 +13,16 @@ CConnectRemoteWidget::CConnectRemoteWidget(QWidget *parent)
     : QWidget(parent)
 {
     initUi();
+
+    CSimpleMetadataServer* server = new CSimpleMetadataServer(this, 5432);
+    CLanMetadataClient* client = new CLanMetadataClient(this, "myuser", QHostAddress::LocalHost, 5432);
+
+    client->connect();
+
+    QObject::connect(client, &CLanMetadataClient::identificationSuccessful, [client]() {
+        qDebug() << "HELLO WE HAVE ";
+        client->joinChannel("mychannel", "mypassword");
+    });
 }
 
 CConnectRemoteWidget::~CConnectRemoteWidget()

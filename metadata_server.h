@@ -2,11 +2,13 @@
 #define METADATA_SERVER_H
 // ------------------------------------------------------------------------------------------------------------------
 #include "metadata.h"
+#include "port_discovery.h"
 
 #include <QObject>
 #include <QHostAddress>
 // ------------------------------------------------------------------------------------------------------------------
 class QTcpServer;
+class CUdpHolePunchingServer;
 // ------------------------------------------------------------------------------------------------------------------
 class IMetadataServer : public QObject
 {
@@ -28,6 +30,7 @@ public:
     enum class UserState
     {
         VALID,
+        WAITING_FOR_DISCOVERY,
         WAITING_FOR_IDENTIFICATION
     };
 
@@ -40,13 +43,18 @@ public:
     void setUsername(QString username) { this->m_Username = username; }
     void setState(UserState state) { this->m_State = state; }
 
+    void startDiscovery();
+
 public slots:
     void onSocketReadyRead();
+    void onDiscoverySuccessful(DiscoveryResult result);
 
 signals:
     void userSocketReadyRead();
+    void discoverySuccessful(DiscoveryResult result);
 
 private:
+    CUdpHolePunchingServer* m_HolePunchingServer;
     QTcpSocket *m_Socket;
     QString m_Username;
     UserState m_State;
@@ -74,6 +82,7 @@ private:
 public slots:
     void onIncommingConnection();
     void userSocketReayRead();
+    void onClientDiscoverySuccessful(DiscoveryResult result);
 
 private:
     QTcpServer* m_Server;

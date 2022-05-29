@@ -7,6 +7,7 @@
 #include <QAbstractSocket>
 // ------------------------------------------------------------------------------------------------------------------
 class QTcpSocket;
+class CUdpHolePunchingClient;
 // ------------------------------------------------------------------------------------------------------------------
 class IMetadataClient : public QObject
 {
@@ -58,8 +59,10 @@ public slots:
 signals:
     void identificationSuccessful();
     void identificationFailed(QString reason);
+    void connectionSuccessful();
 
 private:
+    CUdpHolePunchingClient *m_HolePunchClient;
     QTcpSocket *m_Socket;
     QMap<QString, ChannelMetadata> m_CachedChannels;
 };

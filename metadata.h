@@ -103,6 +103,20 @@ inline QDataStream& operator>>(QDataStream &stream, ChannelConnectRequest& reque
     return stream;
 }
 // ------------------------------------------------------------------------------------------------------------------
+struct ChannelConnectResponse : public StatusResponse
+{};
+inline QDataStream& operator<<(QDataStream &stream, const ChannelConnectResponse& response)
+{
+    stream << QString("connect");
+    stream << response.downCast();
+    return stream;
+}
+inline QDataStream& operator>>(QDataStream &stream, ChannelConnectResponse& response)
+{
+    stream >> response.downCast();
+    return stream;
+}
+// ------------------------------------------------------------------------------------------------------------------
 struct NewChannelCreatedNotification
 {
     QString channelName;
@@ -163,6 +177,24 @@ inline QDataStream& operator<<(QDataStream &stream, const PortDiscoveryRequest& 
 inline QDataStream& operator>>(QDataStream &stream, PortDiscoveryRequest& request)
 {
     stream >> request.discoveryPort;
+    return stream;
+}
+// ------------------------------------------------------------------------------------------------------------------
+struct ClientJoinedChannelNotification
+{
+    QHostAddress clientHost;
+    uint16_t clientPort;
+    QString username;
+};
+inline QDataStream& operator<<(QDataStream &stream, const ClientJoinedChannelNotification& noti)
+{
+    stream << QString("client_joined");
+    stream << /*noti.clientHost <<*/ noti.clientPort << noti.username;
+    return stream;
+}
+inline QDataStream& operator>>(QDataStream &stream, ClientJoinedChannelNotification& noti)
+{
+    stream >> /*noti.clientHost >>*/ noti.clientPort >> noti.username;
     return stream;
 }
 // ------------------------------------------------------------------------------------------------------------------

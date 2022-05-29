@@ -6,6 +6,7 @@
 // ------------------------------------------------------------------------------------------------------------------
 void CUdpHolePunchingServer::start()
 {
+    qDebug() << "Start Hole Punching on Port " << port();
     m_Socket = new QUdpSocket(this);
     m_Socket->bind(port());
 
@@ -22,6 +23,8 @@ void CUdpHolePunchingServer::onSocketReadyRead()
         result.address = datagram.senderAddress();
         result.port = datagram.senderPort();
 
+        m_Socket->writeDatagram(QByteArray(), datagram.senderAddress(), datagram.senderPort());
+        qDebug() << "Discovered " << result.address << " " << result.port;
         emit clientDiscovered(result);
     }
 }
@@ -29,8 +32,19 @@ void CUdpHolePunchingServer::onSocketReadyRead()
 void CUdpHolePunchingClient::start()
 {
     m_Socket = new QUdpSocket(this);
+    m_Socket->bind(bindPort());
+    QObject::connect(m_Socket, &QUdpSocket::readyRead, this, &CUdpHolePunchingClient::onSocketReadyRead);
 
     QByteArray emptyPackage;
-    m_Socket->writeDatagram(emptyPackage, host(), port());
+    m_Socket->writeDatagram(emptyPackage, host(), destinationPort());
+}
+
+void CUdpHolePunchingClient::onSocketReadyRead()
+{
+    if (m_Socket->hasPendingDatagrams())
+    {
+        qDebug() << "Server responded.";
+        emit serverResponded();
+    }
 }
 // ------------------------------------------------------------------------------------------------------------------
