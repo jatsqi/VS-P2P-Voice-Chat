@@ -25,6 +25,8 @@ set(PROJECT_SOURCES
         metadata_server.h
         metadata_server.cpp
         metadata.h
+        port_discovery.h
+        port_discovery.cpp
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
