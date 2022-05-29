@@ -15,13 +15,16 @@ public:
     IMetadataClient(QObject *parent, QString username, QHostAddress serverHost, uint16_t serverPort);
 
     virtual void updateAvailableChannels() = 0;
-    virtual void subscribeToChannel(QString channel, QString password) = 0;
-    //virtual void joinChannel(QString channel, QString password) = 0;
+    virtual void joinChannel(QString channel, QString password) = 0;
+
+    virtual void connect() = 0;
 
     virtual QList<ChannelMetadata> channels() const = 0;
     virtual ChannelMetadata channel(QString name) const = 0;
 
+    QHostAddress host() const { return m_ServerHost; }
     QString username() const { return m_Username; }
+    uint16_t port() const { return m_ServerPort; }
 
 signals:
     void channelsUpdated();
@@ -41,7 +44,9 @@ public:
     CLanMetadataClient(QObject* parent, QString username, QHostAddress serverHost, uint16_t serverPort);
 
     virtual void updateAvailableChannels() override;
-    virtual void subscribeToChannel(QString channel, QString password) override;
+    virtual void joinChannel(QString channel, QString password) override;
+
+    virtual void connect() override;
 
     virtual QList<ChannelMetadata> channels() const override;
     virtual ChannelMetadata channel(QString name) const override;

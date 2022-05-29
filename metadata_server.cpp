@@ -75,10 +75,13 @@ void CSimpleMetadataServer::userSocketReayRead()
         info->setState(CSimpleMetadataUserSocketInformation::UserState::VALID);
 
         IdentificationResponse identRes;
-        identRes.success = true;
+        identRes.code = StatusCode::SUCCESS;
 
         writeToSocket(info->socket(), identRes);
         qDebug() << "User " << identReq.username << " successfully identified!";
+    } else if (action == "connect")
+    {
+        PortDiscoveryRequest
     } else {
         qDebug() << "Unknown Method '" << action << "'";
     }

@@ -19,13 +19,6 @@ CLanMetadataClient::CLanMetadataClient(QObject* parent, QString username, QHostA
 
     QObject::connect(m_Socket, &QTcpSocket::readyRead, this, &CLanMetadataClient::onSocketReadyRead);
     QObject::connect(m_Socket, &QTcpSocket::errorOccurred, this, &CLanMetadataClient::onSocketError);
-
-    m_Socket->connectToHost(serverHost, serverPort);
-    m_Socket->waitForConnected(10000);
-
-    IdentificationRequest request;
-    request.username = username;
-    writeToSocket(m_Socket, request);
 }
 
 void CLanMetadataClient::updateAvailableChannels()
@@ -34,13 +27,23 @@ void CLanMetadataClient::updateAvailableChannels()
     writeToSocket(m_Socket, request);
 }
 
-void CLanMetadataClient::subscribeToChannel(QString channel, QString password)
+void CLanMetadataClient::joinChannel(QString channel, QString password)
 {
     ChannelConnectRequest request;
     request.channelName = channel;
     request.password = password;
     request.username = username();
 
+    writeToSocket(m_Socket, request);
+}
+
+void CLanMetadataClient::connect()
+{
+    m_Socket->connectToHost(host(), port());
+    m_Socket->waitForConnected(10000);
+
+    IdentificationRequest request;
+    request.username = username();
     writeToSocket(m_Socket, request);
 }
 
@@ -67,12 +70,15 @@ void CLanMetadataClient::onSocketReadyRead()
         IdentificationResponse identRes;
         stream >> identRes;
 
-        qDebug() << "Identification response received: " << identRes.success;
+        qDebug() << "Identification response received: " << static_cast<int>(identRes.code);
 
-        if (identRes.success)
+        if (identRes.code == StatusCode::SUCCESS)
             emit identificationSuccessful();
         else
             emit identificationFailed(identRes.message);
+    } else if (action == "port_discovery")
+    {
+
     }
 }
 

@@ -42,6 +42,36 @@ T readFromSocket(QTcpSocket *socket)
     return storage;
 }
 // ------------------------------------------------------------------------------------------------------------------
+enum class StatusCode
+{
+    SUCCESS = 0,
+
+};
+struct StatusResponse
+{
+    StatusCode code;
+    QString message;
+
+    StatusResponse& downCast() { return *this; }
+    const StatusResponse& downCast() const { return *this; }
+};
+inline QDataStream& operator<<(QDataStream &stream, const StatusResponse& response)
+{
+    stream << static_cast<int>(response.code);
+    stream << response.message;
+
+    return stream;
+}
+inline QDataStream& operator>>(QDataStream &stream, StatusResponse& response)
+{
+    int status;
+    stream >> status;
+    stream >> response.message;
+
+    response.code = static_cast<StatusCode>(status);
+    return stream;
+}
+// ------------------------------------------------------------------------------------------------------------------
 struct ChannelMetadataRequest
 {
 };
@@ -105,20 +135,34 @@ inline QDataStream& operator>>(QDataStream &stream, IdentificationRequest& reque
     return stream;
 }
 // ------------------------------------------------------------------------------------------------------------------
-struct IdentificationResponse
+struct IdentificationResponse : public StatusResponse
 {
-    bool success;
-    QString message;
 };
 inline QDataStream& operator<<(QDataStream &stream, const IdentificationResponse& response)
 {
     stream << QString("identification");
-    stream << response.success << response.message;
+    stream << response.downCast();
     return stream;
 }
 inline QDataStream& operator>>(QDataStream &stream, IdentificationResponse& response)
 {
-    stream >> response.success >> response.message;
+    stream >> response.downCast();
+    return stream;
+}
+// ------------------------------------------------------------------------------------------------------------------
+struct PortDiscoveryRequest
+{
+    uint16_t discoveryPort;
+};
+inline QDataStream& operator<<(QDataStream &stream, const PortDiscoveryRequest& request)
+{
+    stream << QString("port_discovery");
+    stream << request.discoveryPort;
+    return stream;
+}
+inline QDataStream& operator>>(QDataStream &stream, PortDiscoveryRequest& request)
+{
+    stream >> request.discoveryPort;
     return stream;
 }
 // ------------------------------------------------------------------------------------------------------------------
