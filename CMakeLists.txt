@@ -18,8 +18,13 @@ set(PROJECT_SOURCES
         main.cpp
         mainwindow.cpp
         mainwindow.h
-        metadata_provider.h
-        metadata_provider.cpp
+        connect_remote_widget.h
+        connect_remote_widget.cpp
+        metadata_client.h
+        metadata_client.cpp
+        metadata_server.h
+        metadata_server.cpp
+        metadata.h
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
