@@ -8,21 +8,12 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QFormLayout>
+#include <QCheckBox>
 // ------------------------------------------------------------------------------------------------------------------
 CConnectRemoteWidget::CConnectRemoteWidget(QWidget *parent)
     : QWidget(parent)
 {
     initUi();
-
-    CSimpleMetadataServer* server = new CSimpleMetadataServer(this, 5432);
-    CLanMetadataClient* client = new CLanMetadataClient(this, "myuser", QHostAddress::LocalHost, 5432);
-
-    client->connect();
-
-    QObject::connect(client, &CLanMetadataClient::identificationSuccessful, [client]() {
-        qDebug() << "HELLO WE HAVE ";
-        client->joinChannel("mychannel", "mypassword");
-    });
 }
 
 CConnectRemoteWidget::~CConnectRemoteWidget()
@@ -32,18 +23,27 @@ CConnectRemoteWidget::~CConnectRemoteWidget()
 
 void CConnectRemoteWidget::initForms()
 {
-    m_WidgetForm = new QWidget(this);
-    m_LayoutForm = new QFormLayout(m_WidgetForm);
+    m_LayoutGeneral = new QFormLayout(this);
+    m_EditUsername = new QLineEdit();
+    m_LayoutGeneral->addRow("Benutzername", m_EditUsername);
 
-    m_EditName = new QLineEdit(m_WidgetForm);
-    m_LayoutForm->addRow("Benutzername: ", m_EditName);
-
-    m_EditIp = new QLineEdit(m_WidgetForm);
+    m_LayoutMetadata = new QFormLayout(this);
+    m_EditIp = new QLineEdit(this);
     m_EditIp->setInputMask("000.000.000.000;_");
-    m_LayoutForm->addRow("IP Adresse des Ziels: ", m_EditIp);
+    m_LayoutMetadata->addRow("IP Adresse des Metadaten-Servers: ", m_EditIp);
 
-    m_WidgetForm->setLayout(m_LayoutForm);
-    m_MainLayout->addWidget(m_WidgetForm);
+    m_EditPort = new QLineEdit(this);
+    m_EditPort->setInputMask("00000;_");
+    m_LayoutMetadata->addRow("Port des Metadaten-Servers: ", m_EditPort);
+
+    m_CheckBoxLocalServer = new QCheckBox(this);
+    m_CheckBoxLocalServer->setChecked(false);
+    m_LayoutMetadata->addRow("Metadata-Server lokale Starten", m_CheckBoxLocalServer);
+
+    QObject::connect(m_CheckBoxLocalServer, &QCheckBox::clicked, this, &CConnectRemoteWidget::onCheckBoxLocalServerPressed);
+
+    m_MainLayout->addLayout(m_LayoutGeneral);
+    m_MainLayout->addLayout(m_LayoutMetadata);
 }
 
 void CConnectRemoteWidget::initUi()
@@ -70,5 +70,11 @@ void CConnectRemoteWidget::initUi()
 void CConnectRemoteWidget::onConnectButtonPressed()
 {
 
+}
+
+void CConnectRemoteWidget::onCheckBoxLocalServerPressed(bool state)
+{
+    m_EditIp->setEnabled(!state);
+    m_EditPort->setEnabled(!state);
 }
 // ------------------------------------------------------------------------------------------------------------------
