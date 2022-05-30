@@ -2,6 +2,7 @@
 #include "port_discovery.h"
 #include "metadata_server.h"
 #include "metadata_client.h"
+#include "voice_client.h"
 
 #include <QVBoxLayout>
 #include <QPushButton>
@@ -9,11 +10,59 @@
 #include <QLineEdit>
 #include <QFormLayout>
 #include <QCheckBox>
+
+#include <QAudioFormat>
+#include <QAudioSource>
+#include <QAudioOutput>
+#include <QMediaDevices>
+#include <QAudioSink>
 // ------------------------------------------------------------------------------------------------------------------
 CConnectRemoteWidget::CConnectRemoteWidget(QWidget *parent)
     : QWidget(parent)
 {
     initUi();
+
+    QAudioFormat format;
+    format.setSampleRate(8000);
+    format.setChannelCount(1);
+    format.setSampleFormat(QAudioFormat::Int16);
+    format = QMediaDevices::defaultAudioOutput().preferredFormat();
+
+    client = new CVoiceClient(this, nullptr, 21213);
+    client->open(QIODevice::ReadWrite);
+
+    source = new QAudioSource(QMediaDevices::defaultAudioInput(), format);
+    source->start(client);
+
+    sink = new QAudioSink(QMediaDevices::defaultAudioOutput(), format);
+    sink->setVolume(1);
+    input = sink->start();
+
+    QObject::connect(client, &QIODevice::readyRead, [this]() {
+        QByteArray buffer(client->bytesAvailable(), 0);
+        qint64 l = client->read(buffer.data(), client->bytesAvailable());
+        if (l > 0) {
+            input->write(buffer);
+        } else {
+            qDebug() << "Sorry, l < 0 :(";
+        }
+
+        /*static const qint64 BufferSize = 4096;
+        const qint64 len = qMin(source->bytesAvailable(), BufferSize);
+
+        QByteArray buffer(len, 0);
+        qint64 l = input->read(buffer.data(), len);
+        if (l > 0) {
+            client->write(buffer);
+        } else {
+            qDebug() << "Sorry, l < 0 :(";
+        }*/
+    });
+
+    QObject::connect(sink, &QAudioSink::stateChanged, [](QAudio::State state)
+    {
+        qDebug() << "State changed to " << state;
+    });
 }
 
 CConnectRemoteWidget::~CConnectRemoteWidget()

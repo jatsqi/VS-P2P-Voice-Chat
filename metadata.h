@@ -77,7 +77,7 @@ enum class StatusCode
     CHANNEL_NOT_FOUND,
     CHANNEL_WRONG_PASSWORD
 };
-QString statusCodeToMessage(StatusCode code)
+static QString statusCodeToMessage(StatusCode code)
 {
     switch (code)
     {
@@ -85,6 +85,8 @@ QString statusCodeToMessage(StatusCode code)
     case StatusCode::CHANNEL_NOT_FOUND: return "Der Channel exisitiert nicht.";
     case StatusCode::CHANNEL_WRONG_PASSWORD: return "Das Passwort ist falsch.";
     }
+
+    return "Nicht behandelter Status Code.";
 }
 struct StatusResponse
 {
@@ -146,16 +148,20 @@ inline QDataStream& operator>>(QDataStream &stream, ChannelConnectRequest& reque
 }
 // ------------------------------------------------------------------------------------------------------------------
 struct ChannelConnectResponse : public StatusResponse
-{};
+{
+    ChannelMetadata connectedChannel;
+};
 inline QDataStream& operator<<(QDataStream &stream, const ChannelConnectResponse& response)
 {
     stream << QString("connect");
     stream << response.downCast();
+    stream << response.connectedChannel;
     return stream;
 }
 inline QDataStream& operator>>(QDataStream &stream, ChannelConnectResponse& response)
 {
     stream >> response.downCast();
+    stream >> response.connectedChannel;
     return stream;
 }
 // ------------------------------------------------------------------------------------------------------------------

@@ -165,12 +165,11 @@ void CSimpleMetadataServer::onClientDiscoverySuccessful(DiscoveryResult result)
 
     ChannelConnectResponse connectResponse;
     connectResponse.code = StatusCode::SUCCESS;
+    connectResponse.connectedChannel = *getChannel(info->channel());
     writeToSocket(info->socket(), connectResponse);
 
     ClientJoinedChannelNotification noti;
-    noti.username = info->username();
-    noti.clientHost = result.address;
-    noti.clientPort = result.port;
+    noti.joinedUser = info->metadata();
     sendToAllClientsInChannel(noti, info->channel());
 }
 // ------------------------------------------------------------------------------------------------------------------

@@ -49,6 +49,16 @@ void CLanMetadataClient::connect()
     writeToSocket(m_Socket, request);
 }
 
+QList<UserMetadata> CLanMetadataClient::usersInCurrentChannel()
+{
+
+}
+
+ChannelMetadata* CLanMetadataClient::currentChannel() const
+{
+
+}
+
 QList<ChannelMetadata> CLanMetadataClient::channels() const
 {
     return m_CachedChannels.values();
@@ -94,7 +104,10 @@ void CLanMetadataClient::onSocketReadyRead()
             stream >> connResp;
 
             if (connResp.code == StatusCode::SUCCESS)
+            {
+                m_CurrentChannel = connResp.connectedChannel;
                 emit connectionSuccessful();
+            }
             else
                 emit connectionFailed(connResp.message);
         }
@@ -103,9 +116,13 @@ void CLanMetadataClient::onSocketReadyRead()
             ClientJoinedChannelNotification noti;
             stream >> noti;
 
-            if (noti.username != username())
-                qDebug() << "New Client joined: " << noti.username;
-            else
+            if (noti.joinedUser.username != username())
+            {
+                m_CachedClients.insert(noti.joinedUser.username, noti.joinedUser);
+                emit currentChannelUpdated();
+                qDebug() << "New Client joined: " << noti.joinedUser.username;
+            }
+                else
                 qDebug() << "Server notified me that I joined, ignoring...";
         }
         else if (action == "overview")

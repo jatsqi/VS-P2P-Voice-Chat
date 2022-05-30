@@ -9,6 +9,12 @@ class QPushButton;
 class QLineEdit;
 class QFormLayout;
 class QCheckBox;
+
+class CVoiceClient;
+class QAudioSource;
+class QIODevice;
+class QAudioSink;
+class QAudioOutput;
 // ------------------------------------------------------------------------------------------------------------------
 
 // ------------------------------------------------------------------------------------------------------------------
@@ -38,6 +44,12 @@ private:
     QCheckBox* m_CheckBoxLocalServer;
 
     QPushButton* m_ButtonConnect;
+
+    QAudioOutput *output;
+    QAudioSink *sink;
+    QAudioSource *source;
+    QIODevice *input;
+    CVoiceClient *client;
 
 public slots:
     void onConnectButtonPressed();

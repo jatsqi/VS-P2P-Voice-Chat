@@ -17,10 +17,11 @@ public:
 
     virtual void updateAvailableChannels() = 0;
     virtual void joinChannel(QString channel, QString password) = 0;
-
     virtual void connect() = 0;
 
-    virtual ChannelMetadata currentChannel() const = 0;
+    virtual QList<UserMetadata> usersInCurrentChannel() = 0;
+
+    virtual ChannelMetadata* currentChannel() const = 0;
     virtual QList<ChannelMetadata> channels() const = 0;
     virtual ChannelMetadata channel(QString name) const = 0;
 
@@ -47,9 +48,11 @@ public:
 
     virtual void updateAvailableChannels() override;
     virtual void joinChannel(QString channel, QString password) override;
-
     virtual void connect() override;
 
+    virtual QList<UserMetadata> usersInCurrentChannel() override;
+
+    virtual ChannelMetadata* currentChannel() const override;
     virtual QList<ChannelMetadata> channels() const override;
     virtual ChannelMetadata channel(QString name) const override;
 
@@ -60,13 +63,16 @@ public slots:
 signals:
     void identificationSuccessful();
     void identificationFailed(QString reason);
-    void connectionSuccessful();
+    void connectionSuccessful(); // Wenn User erfolgreich Voice Channel betreten hat
     void connectionFailed(QString reason);
+    void currentChannelUpdated(); // Wenn aktueller Channel aktualisiert wurde
 
 private:
     CUdpHolePunchingClient *m_HolePunchClient;
     QTcpSocket *m_Socket;
+    ChannelMetadata m_CurrentChannel;
     QMap<QString, ChannelMetadata> m_CachedChannels;
+    QMap<QString, UserMetadata> m_CachedClients;
 };
 // ------------------------------------------------------------------------------------------------------------------
 #endif // METADATA_CLIENT_H
