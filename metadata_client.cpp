@@ -94,9 +94,9 @@ void CLanMetadataClient::onSocketReadyRead()
             stream >> connResp;
 
             if (connResp.code == StatusCode::SUCCESS)
-            {
-
-            }
+                emit connectionSuccessful();
+            else
+                emit connectionFailed(connResp.message);
         }
         else if (action == "client_joined")
         {
@@ -107,6 +107,18 @@ void CLanMetadataClient::onSocketReadyRead()
                 qDebug() << "New Client joined: " << noti.username;
             else
                 qDebug() << "Server notified me that I joined, ignoring...";
+        }
+        else if (action == "overview")
+        {
+            OverviewResponse ovRes;
+            stream >> ovRes;
+
+            m_CachedChannels.clear();
+            for (const ChannelMetadata &md : ovRes.channels)
+            {
+                qDebug() << "Found channel: " << md.channelName;
+                m_CachedChannels.insert(md.channelName, md);
+            }
         }
         else
         {

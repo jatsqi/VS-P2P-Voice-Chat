@@ -38,10 +38,22 @@ public:
 
     QTcpSocket* socket() { return m_Socket; }
     QString username() const { return m_Username; }
+    QString channel() const { return m_Channel; }
     UserState state() const { return m_State; }
 
     void setUsername(QString username) { this->m_Username = username; }
     void setState(UserState state) { this->m_State = state; }
+    void setChannel(QString channel) { this->m_Channel = channel; }
+    UserMetadata metadata() const
+    {
+        UserMetadata md;
+        md.username = m_Username;
+        md.channelName = m_Channel;
+        md.host = m_LastDiscoveryResult.address;
+        md.port = m_LastDiscoveryResult.port;
+
+        return md;
+    }
 
     void startDiscovery();
 
@@ -57,7 +69,9 @@ private:
     CUdpHolePunchingServer* m_HolePunchingServer;
     QTcpSocket *m_Socket;
     QString m_Username;
+    QString m_Channel;
     UserState m_State;
+    DiscoveryResult m_LastDiscoveryResult;
 };
 // ------------------------------------------------------------------------------------------------------------------
 class CSimpleMetadataServer : public IMetadataServer
@@ -69,13 +83,33 @@ public:
     virtual void createChannel(QString name, QString password);
     virtual QList<ChannelMetadata> channels() const;
 
+    ChannelMetadata* getChannel(QString name)
+    {
+        if (m_OwnedChannels.contains(name))
+            return &m_OwnedChannels.find(name).value();
+
+        return nullptr;
+    }
+
 private:
     template<typename T>
     void sendToAllClients(T &data)
     {
         for (auto &socket : m_ConnectedClients)
         {
-            writeToSocket(socket->socket(), data);
+            if (socket->state() == CSimpleMetadataUserSocketInformation::UserState::VALID)
+                writeToSocket(socket->socket(), data);
+        }
+    }
+
+    template<typename T>
+    void sendToAllClientsInChannel(T &data, QString channel)
+    {
+        for (auto &socket : m_ConnectedClients)
+        {
+            if (socket->state() == CSimpleMetadataUserSocketInformation::UserState::VALID &&
+                    socket->channel() == channel)
+                writeToSocket(socket->socket(), data);
         }
     }
 

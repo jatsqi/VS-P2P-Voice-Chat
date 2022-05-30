@@ -19,6 +19,7 @@ CSimpleMetadataUserSocketInformation::CSimpleMetadataUserSocketInformation(QObje
 void CSimpleMetadataUserSocketInformation::startDiscovery()
 {
     m_State = UserState::WAITING_FOR_DISCOVERY;
+    m_LastDiscoveryResult = DiscoveryResult();
 
     m_HolePunchingServer = new CUdpHolePunchingServer(this, 18761);
     QObject::connect(m_HolePunchingServer, &CUdpHolePunchingServer::clientDiscovered, this, &CSimpleMetadataUserSocketInformation::onDiscoverySuccessful);
@@ -33,6 +34,7 @@ void CSimpleMetadataUserSocketInformation::onSocketReadyRead()
 void CSimpleMetadataUserSocketInformation::onDiscoverySuccessful(DiscoveryResult result)
 {
     m_State = UserState::VALID;
+    m_LastDiscoveryResult = result;
 
     delete m_HolePunchingServer;
     emit discoverySuccessful(result);
@@ -78,43 +80,81 @@ void CSimpleMetadataServer::userSocketReayRead()
 {
     CSimpleMetadataUserSocketInformation *info = qobject_cast<CSimpleMetadataUserSocketInformation*>(sender());
 
-    QByteArray data = info->socket()->readAll();
-    QDataStream stream(data);
+    QDataStream stream(info->socket());
 
-    QString action;
-    stream >> action;
-
-    if (action == "identification")
+    while (info->socket()->bytesAvailable() > 0)
     {
-        IdentificationRequest identReq;
-        stream >> identReq;
+        QString action;
+        stream >> action;
 
-        info->setUsername(identReq.username);
-        info->setState(CSimpleMetadataUserSocketInformation::UserState::VALID);
+        if (action == "identification")
+        {
+            IdentificationRequest identReq;
+            stream >> identReq;
 
-        IdentificationResponse identRes;
-        identRes.code = StatusCode::SUCCESS;
+            info->setUsername(identReq.username);
+            info->setState(CSimpleMetadataUserSocketInformation::UserState::VALID);
 
-        writeToSocket(info->socket(), identRes);
-        qDebug() << "User " << identReq.username << " successfully identified!";
-    }
-    // Client möchte sich verbinden, starte UDP Hole Punching
-    else if (action == "connect")
-    {
-        qDebug() << "Client wants to connect.";
-        PortDiscoveryRequest portDis;
-        portDis.discoveryPort = 18761;
+            IdentificationResponse identRes;
+            identRes.code = StatusCode::SUCCESS;
+            writeToSocket(info->socket(), identRes);
+            qDebug() << "User " << identReq.username << " successfully identified!";
+        }
+        // Client möchte sich verbinden, starte UDP Hole Punching
+        else if (action == "connect")
+        {
+            qDebug() << "Client wants to connect.";
+            ChannelConnectRequest connReq;
+            stream >> connReq;
 
-        // Starte Hole Punching Socket
-        QObject::connect(info, &CSimpleMetadataUserSocketInformation::discoverySuccessful, this, &CSimpleMetadataServer::onClientDiscoverySuccessful);
-        info->startDiscovery();
+            ChannelMetadata* channel = getChannel(connReq.channelName);
+            ChannelConnectResponse connectResponse;
+            connectResponse.code = StatusCode::SUCCESS;
 
-        // Sende Infos an Client
-        writeToSocket(info->socket(), portDis);
-    }
-    else
-    {
-        qDebug() << "Unknown Method '" << action << "'";
+            if (channel != nullptr)
+            {
+                if (channel->password != connReq.password)
+                    connectResponse.code = StatusCode::CHANNEL_WRONG_PASSWORD;
+            }
+            else
+            {
+                connectResponse.code = StatusCode::CHANNEL_NOT_FOUND;
+            }
+
+            if (connectResponse.code != StatusCode::SUCCESS)
+            {
+                writeToSocket(info->socket(), connectResponse);
+                return;
+            }
+
+            PortDiscoveryRequest portDis;
+            portDis.discoveryPort = 18761;
+
+            // Starte Hole Punching Socket
+            QObject::connect(info, &CSimpleMetadataUserSocketInformation::discoverySuccessful, this, &CSimpleMetadataServer::onClientDiscoverySuccessful);
+            info->startDiscovery();
+            info->setChannel(connReq.channelName);
+
+            // Sende Infos an Client
+            writeToSocket(info->socket(), portDis);
+        }
+        else
+        {
+            qDebug() << "Unknown Method '" << action << "'";
+        }
+
+        if (action == "identification" || action == "overview")
+        {
+            OverviewResponse ovRes;
+            ovRes.isConnectedToChannel = !info->channel().isEmpty() && info->state() == CSimpleMetadataUserSocketInformation::UserState::VALID;
+            ovRes.channels = m_OwnedChannels.values();
+            for (auto &info : m_ConnectedClients)
+                ovRes.users.append(info->metadata());
+            if (info->channel() != "")
+                ovRes.currentChannel = *getChannel(info->channel());
+
+            writeToSocket(info->socket(), ovRes);
+        }
     }
 }
 
@@ -131,6 +171,6 @@ void CSimpleMetadataServer::onClientDiscoverySuccessful(DiscoveryResult result)
     noti.username = info->username();
     noti.clientHost = result.address;
     noti.clientPort = result.port;
-    sendToAllClients(noti);
+    sendToAllClientsInChannel(noti, info->channel());
 }
 // ------------------------------------------------------------------------------------------------------------------

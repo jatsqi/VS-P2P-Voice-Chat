@@ -27,6 +27,12 @@ set(PROJECT_SOURCES
         metadata.h
         port_discovery.h
         port_discovery.cpp
+        channel_overview_widget.h
+        channel_overview_widget.cpp
+        channel_widget.h
+        channel_widget.cpp
+        voice_client.h
+        voice_client.cpp
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)

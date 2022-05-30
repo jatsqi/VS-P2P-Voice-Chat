@@ -20,6 +20,7 @@ public:
 
     virtual void connect() = 0;
 
+    virtual ChannelMetadata currentChannel() const = 0;
     virtual QList<ChannelMetadata> channels() const = 0;
     virtual ChannelMetadata channel(QString name) const = 0;
 
@@ -60,6 +61,7 @@ signals:
     void identificationSuccessful();
     void identificationFailed(QString reason);
     void connectionSuccessful();
+    void connectionFailed(QString reason);
 
 private:
     CUdpHolePunchingClient *m_HolePunchClient;

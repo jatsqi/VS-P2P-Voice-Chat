@@ -6,10 +6,18 @@
 #include <QHostAddress>
 #include <QMap>
 // ------------------------------------------------------------------------------------------------------------------
+enum class UserStatus
+{
+    ACTIVE,
+    MUTED
+};
+// ------------------------------------------------------------------------------------------------------------------
 struct UserMetadata {
     QString username;
+    QString channelName;
     QHostAddress host;
     uint16_t port;
+    UserStatus status;
 };
 // ------------------------------------------------------------------------------------------------------------------
 struct ChannelMetadata
@@ -17,6 +25,27 @@ struct ChannelMetadata
     QString channelName;
     QString password;
 };
+// ------------------------------------------------------------------------------------------------------------------
+inline QDataStream& operator<<(QDataStream &stream, const UserMetadata& md)
+{
+    stream << md.username << md.channelName << md.host << md.port << static_cast<int>(md.status);
+    return stream;
+}
+inline QDataStream& operator>>(QDataStream &stream, UserMetadata& md)
+{
+    stream >> md.username >> md.channelName >> md.host >> md.port >> md.status;
+    return stream;
+}
+inline QDataStream& operator<<(QDataStream &stream, const ChannelMetadata& md)
+{
+    stream << md.channelName;
+    return stream;
+}
+inline QDataStream& operator>>(QDataStream &stream, ChannelMetadata& md)
+{
+    stream >> md.channelName;
+    return stream;
+}
 // ------------------------------------------------------------------------------------------------------------------
 template<typename T>
 void writeToSocket(QTcpSocket *socket, const T& data)
@@ -45,8 +74,18 @@ T readFromSocket(QTcpSocket *socket)
 enum class StatusCode
 {
     SUCCESS = 0,
-
+    CHANNEL_NOT_FOUND,
+    CHANNEL_WRONG_PASSWORD
 };
+QString statusCodeToMessage(StatusCode code)
+{
+    switch (code)
+    {
+    case StatusCode::SUCCESS: return "Erfolg.";
+    case StatusCode::CHANNEL_NOT_FOUND: return "Der Channel exisitiert nicht.";
+    case StatusCode::CHANNEL_WRONG_PASSWORD: return "Das Passwort ist falsch.";
+    }
+}
 struct StatusResponse
 {
     StatusCode code;
@@ -58,7 +97,10 @@ struct StatusResponse
 inline QDataStream& operator<<(QDataStream &stream, const StatusResponse& response)
 {
     stream << static_cast<int>(response.code);
-    stream << response.message;
+    if (response.message.isEmpty())
+        stream << statusCodeToMessage(response.code);
+    else
+        stream << response.message;
 
     return stream;
 }
@@ -182,19 +224,48 @@ inline QDataStream& operator>>(QDataStream &stream, PortDiscoveryRequest& reques
 // ------------------------------------------------------------------------------------------------------------------
 struct ClientJoinedChannelNotification
 {
-    QHostAddress clientHost;
-    uint16_t clientPort;
-    QString username;
+    UserMetadata joinedUser;
 };
 inline QDataStream& operator<<(QDataStream &stream, const ClientJoinedChannelNotification& noti)
 {
     stream << QString("client_joined");
-    stream << /*noti.clientHost <<*/ noti.clientPort << noti.username;
+    stream << noti.joinedUser;
     return stream;
 }
 inline QDataStream& operator>>(QDataStream &stream, ClientJoinedChannelNotification& noti)
 {
-    stream >> /*noti.clientHost >>*/ noti.clientPort >> noti.username;
+    stream >> noti.joinedUser;
+    return stream;
+}
+// ------------------------------------------------------------------------------------------------------------------
+struct OverviewRequest
+{};
+inline QDataStream& operator<<(QDataStream &stream, const OverviewRequest& request)
+{
+    stream << QString("overview");
+    return stream;
+}
+inline QDataStream& operator>>(QDataStream &stream, OverviewRequest& request)
+{
+    return stream;
+}
+// ------------------------------------------------------------------------------------------------------------------
+struct OverviewResponse
+{
+    bool isConnectedToChannel;
+    ChannelMetadata currentChannel;
+    QList<ChannelMetadata> channels;
+    QList<UserMetadata> users;
+};
+inline QDataStream& operator<<(QDataStream &stream, const OverviewResponse& response)
+{
+    stream << QString("overview");
+    stream << response.isConnectedToChannel << response.currentChannel;
+    stream << response.channels << response.users;
+    return stream;
+}
+inline QDataStream& operator>>(QDataStream &stream, OverviewResponse& response)
+{
     return stream;
 }
 // ------------------------------------------------------------------------------------------------------------------
