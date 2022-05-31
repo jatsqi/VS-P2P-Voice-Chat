@@ -33,7 +33,7 @@ void CUdpHolePunchingClient::start()
 {
     m_Socket = new QUdpSocket(this);
     m_Socket->bind(bindPort());
-    QObject::connect(m_Socket, &QUdpSocket::readyRead, this, &CUdpHolePunchingClient::onSocketReadyRead);
+    //QObject::connect(m_Socket, &QUdpSocket::readyRead, this, &CUdpHolePunchingClient::onSocketReadyRead);
 
     QByteArray emptyPackage;
     m_Socket->writeDatagram(emptyPackage, host(), destinationPort());
@@ -41,10 +41,10 @@ void CUdpHolePunchingClient::start()
 
 void CUdpHolePunchingClient::onSocketReadyRead()
 {
-    if (m_Socket->hasPendingDatagrams())
+    /*if (m_Socket->hasPendingDatagrams())
     {
         qDebug() << "Server responded.";
         emit serverResponded();
-    }
+    }*/
 }
 // ------------------------------------------------------------------------------------------------------------------
