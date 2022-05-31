@@ -98,6 +98,11 @@ void MainWindow::initAudio()
 
     if (m_VoiceClient != nullptr)
     {
+        m_AudioOutput->stop();
+        m_AudioInput->stop();
+
+        delete m_AudioInput;
+        delete m_AudioOutput;
         delete m_VoiceClient;
     }
 
