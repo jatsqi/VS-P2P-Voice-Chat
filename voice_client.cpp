@@ -70,12 +70,11 @@ void CVoiceClient::onSocketReadyRead()
         stream >> voiceData;
 
         m_ReadBuffer.append(voiceData);
-        qDebug() << "Received voice from " << username << " with size " << voiceData.size() << " rdbuffer: " << m_ReadBuffer.size();
-    }
+        qDebug() << "Received voice from " << username << " with size " << voiceData.size() << " rdbuffer: " << m_ReadBuffer.size();   
 
-    if (m_ReadBuffer.size() > m_Format.bytesForDuration(1000000)) {
-        emit readyRead();
-        emit voiceDataReady();
+        if (m_ReadBuffer.size() > m_Format.bytesForDuration(1000000)) {
+            emit voiceDataReady();
+        }
     }
 }
 // ------------------------------------------------------------------------------------------------------------------
