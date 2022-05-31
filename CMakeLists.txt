@@ -33,6 +33,7 @@ set(PROJECT_SOURCES
         channel_widget.cpp
         voice_client.h
         voice_client.cpp
+        random_helper.h
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)

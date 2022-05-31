@@ -10,6 +10,7 @@
 #include <QLineEdit>
 #include <QFormLayout>
 #include <QCheckBox>
+#include <QMessageBox>
 
 #include <QAudioFormat>
 #include <QAudioSource>
@@ -21,14 +22,20 @@ CConnectRemoteWidget::CConnectRemoteWidget(QWidget *parent)
     : QWidget(parent)
 {
     initUi();
+    m_EditUsername->setFocus();
 
-    QAudioFormat format;
+    m_EditUsername->setText("hello5");
+    m_EditPort->setText("12345");
+    m_EditIp->setText("127.000.000.001");
+    m_CheckBoxLocalServer->setChecked(true);
+
+    /*QAudioFormat format;
     format.setSampleRate(8000);
     format.setChannelCount(1);
     format.setSampleFormat(QAudioFormat::Int16);
     format = QMediaDevices::defaultAudioOutput().preferredFormat();
 
-    client = new CVoiceClient(this, nullptr, 21213);
+    client = new CVoiceClient(this, nullptr, 21213, format);
     client->open(QIODevice::ReadWrite);
 
     source = new QAudioSource(QMediaDevices::defaultAudioInput(), format);
@@ -36,13 +43,18 @@ CConnectRemoteWidget::CConnectRemoteWidget(QWidget *parent)
 
     sink = new QAudioSink(QMediaDevices::defaultAudioOutput(), format);
     sink->setVolume(1);
-    input = sink->start();
+    //input = sink->start();
 
     QObject::connect(client, &QIODevice::readyRead, [this]() {
-        QByteArray buffer(client->bytesAvailable(), 0);
+        if (sink->state() != QAudio::State::ActiveState)
+        {
+            sink->start(client);
+        }
+        /*QByteArray buffer(client->bytesAvailable(), 0);
         qint64 l = client->read(buffer.data(), client->bytesAvailable());
         if (l > 0) {
             input->write(buffer);
+            qDebug() << "WRITTEN!";
         } else {
             qDebug() << "Sorry, l < 0 :(";
         }
@@ -56,18 +68,38 @@ CConnectRemoteWidget::CConnectRemoteWidget(QWidget *parent)
             client->write(buffer);
         } else {
             qDebug() << "Sorry, l < 0 :(";
-        }*/
+        }
     });
 
     QObject::connect(sink, &QAudioSink::stateChanged, [](QAudio::State state)
     {
         qDebug() << "State changed to " << state;
-    });
+    });*/
 }
 
 CConnectRemoteWidget::~CConnectRemoteWidget()
 {
     //delete m_Broker;
+}
+
+QHostAddress CConnectRemoteWidget::inputHost() const
+{
+    return QHostAddress(m_EditIp->text());
+}
+
+QString CConnectRemoteWidget::inputUsername() const
+{
+    return m_EditUsername->text();
+}
+
+uint16_t CConnectRemoteWidget::inputPort() const
+{
+    return m_EditPort->text().toUInt();
+}
+
+bool CConnectRemoteWidget::inputStartLocal() const
+{
+    return m_CheckBoxLocalServer->isChecked();
 }
 
 void CConnectRemoteWidget::initForms()
@@ -118,12 +150,29 @@ void CConnectRemoteWidget::initUi()
 
 void CConnectRemoteWidget::onConnectButtonPressed()
 {
+    if (m_EditUsername->text().size() < 3)
+    {
+        QMessageBox::critical(this, "Eingaben Fehlerhaft", "Der Nutzername muss mehr als 3 Zeichen beinhalten.");
+        return;
+    }
 
+    if (m_EditIp->text().size() != 15 && !m_CheckBoxLocalServer->isChecked())
+    {
+        QMessageBox::critical(this, "Eingaben Fehlerhaft", "Die IPv4 muss aus genau 12 Zahlen bestehen.");
+        return;
+    }
+
+    if (m_EditPort->text().isEmpty())
+    {
+        QMessageBox::critical(this, "Eingaben Fehlerhaft", "Der Port muss aus mindestens einer Zahl bestehen.");
+        return;
+    }
+
+    emit connectButtonPressed();
 }
 
 void CConnectRemoteWidget::onCheckBoxLocalServerPressed(bool state)
 {
     m_EditIp->setEnabled(!state);
-    m_EditPort->setEnabled(!state);
 }
 // ------------------------------------------------------------------------------------------------------------------

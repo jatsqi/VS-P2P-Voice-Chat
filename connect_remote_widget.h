@@ -2,6 +2,7 @@
 #define CONNECTREMOTE_H
 // ------------------------------------------------------------------------------------------------------------------
 #include <QMainWindow>
+#include <QHostAddress>
 // ------------------------------------------------------------------------------------------------------------------
 class QVBoxLayout;
 class QLabel;
@@ -25,6 +26,14 @@ class CConnectRemoteWidget : public QWidget
 public:
     CConnectRemoteWidget(QWidget *parent = nullptr);
     ~CConnectRemoteWidget();
+
+    QHostAddress inputHost() const;
+    QString inputUsername() const;
+    uint16_t inputPort() const;
+    bool inputStartLocal() const;
+
+signals:
+    void connectButtonPressed();
 
 private:
     void initForms();
