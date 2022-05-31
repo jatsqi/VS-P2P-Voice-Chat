@@ -9,6 +9,7 @@ class QPushButton;
 class QHBoxLayout;
 class QVBoxLayout;
 class QLabel;
+class QListWidget;
 // ------------------------------------------------------------------------------------------------------------------
 class CChannelWidget : public QWidget
 {
@@ -35,8 +36,9 @@ private:
     QLabel* m_NameLabel;
     QPushButton* m_ConnectButton;
     QVBoxLayout* m_Layout;
+    QWidget* m_MetadataWidget;
     QHBoxLayout* m_MetadataLayout;
-    QVBoxLayout* m_ClientsLayout;
+    QListWidget* m_ClientList;
 };
 
 #endif // CHANNEL_WIDGET_H
