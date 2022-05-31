@@ -17,6 +17,7 @@ public:
 
     virtual void updateAvailableChannels() = 0;
     virtual void joinChannel(QString channel, QString password) = 0;
+    virtual void leaveChannel() = 0;
     virtual void connect() = 0;
 
     virtual const ChannelMetadata* currentChannel() const = 0;
@@ -41,6 +42,7 @@ public:
 
     virtual void updateAvailableChannels() override;
     virtual void joinChannel(QString channel, QString password) override;
+    virtual void leaveChannel() override;
     virtual void connect() override;
 
     virtual const ChannelMetadata* currentChannel() const override;

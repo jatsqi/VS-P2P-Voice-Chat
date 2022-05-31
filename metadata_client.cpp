@@ -15,7 +15,7 @@ IMetadataClient::IMetadataClient(QObject *parent, QString username, QHostAddress
 }
 // ------------------------------------------------------------------------------------------------------------------
 CLanMetadataClient::CLanMetadataClient(QObject* parent, QString username, QHostAddress serverHost, uint16_t serverPort)
-    : IMetadataClient(parent, username, serverHost, serverPort), m_PreferredVoicePort(35006)
+    : IMetadataClient(parent, username, serverHost, serverPort), m_PreferredVoicePort(35006), m_HolePunchClient(nullptr)
 {
     m_Socket = new QTcpSocket(parent);
 
@@ -31,6 +31,8 @@ void CLanMetadataClient::updateAvailableChannels()
 
 void CLanMetadataClient::joinChannel(QString channel, QString password)
 {
+    leaveChannel();
+
     ChannelConnectRequest request;
     request.channelName = channel;
     request.password = password;
@@ -38,6 +40,15 @@ void CLanMetadataClient::joinChannel(QString channel, QString password)
 
     writeToSocket(m_Socket, request);
     qDebug() << "I want to join the channel bro";
+}
+
+void CLanMetadataClient::leaveChannel()
+{
+    if (m_CurrentChannelName == "")
+        return;
+
+    ChannelDisconnectRequest request;
+    writeToSocket(m_Socket, request);
 }
 
 void CLanMetadataClient::connect()
@@ -52,6 +63,9 @@ void CLanMetadataClient::connect()
 
 const ChannelMetadata* CLanMetadataClient::currentChannel() const
 {
+    if (m_CurrentChannelName == "")
+        return nullptr;
+
     auto it = m_CachedChannels.find(m_CurrentChannelName);
     if (it == m_CachedChannels.end())
         return nullptr;
@@ -162,6 +176,18 @@ void CLanMetadataClient::onSocketReadyRead()
                 m_CachedChannels.insert(md.channelName, md);
             }
 
+            emit channelsUpdated();
+        }
+        else if (action == "disconnect")
+        {
+            ClientDisconnectedFromChannelNotification noti;
+            stream >> noti;
+
+            if (noti.affectedUser.username == username())
+                m_CurrentChannelName = QString();
+
+            m_CachedChannels.insert(noti.affectedChannel.channelName, noti.affectedChannel);
+            emit currentChannelUpdated();
             emit channelsUpdated();
         }
         else

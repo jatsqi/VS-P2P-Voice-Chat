@@ -170,6 +170,37 @@ inline QDataStream& operator>>(QDataStream &stream, ChannelConnectResponse& resp
     return stream;
 }
 // ------------------------------------------------------------------------------------------------------------------
+struct ChannelDisconnectRequest
+{};
+inline QDataStream& operator<<(QDataStream &stream, const ChannelDisconnectRequest& request)
+{
+    stream << QString("disconnect");
+    return stream;
+}
+inline QDataStream& operator>>(QDataStream &stream, ChannelDisconnectRequest& request)
+{
+    return stream;
+}
+// ------------------------------------------------------------------------------------------------------------------
+struct ClientDisconnectedFromChannelNotification
+{
+    ChannelMetadata affectedChannel;
+    UserMetadata affectedUser;
+};
+inline QDataStream& operator<<(QDataStream &stream, const ClientDisconnectedFromChannelNotification& response)
+{
+    stream << QString("disconnect");
+    stream << response.affectedChannel;
+    stream << response.affectedUser;
+    return stream;
+}
+inline QDataStream& operator>>(QDataStream &stream, ClientDisconnectedFromChannelNotification& response)
+{
+    stream >> response.affectedChannel;
+    stream >> response.affectedUser;
+    return stream;
+}
+// ------------------------------------------------------------------------------------------------------------------
 struct NewChannelCreatedNotification
 {
     QString channelName;

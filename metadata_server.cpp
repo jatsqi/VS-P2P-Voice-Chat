@@ -15,6 +15,7 @@ CSimpleMetadataUserSocketInformation::CSimpleMetadataUserSocketInformation(QObje
     : QObject(parent), m_Socket(socket), m_State(UserState::WAITING_FOR_IDENTIFICATION)
 {
     QObject::connect(m_Socket, &QTcpSocket::readyRead, this, &CSimpleMetadataUserSocketInformation::onSocketReadyRead);
+    QObject::connect(m_Socket, &QTcpSocket::errorOccurred, this, &CSimpleMetadataUserSocketInformation::onSocketError);
 }
 
 void CSimpleMetadataUserSocketInformation::startDiscovery(uint16_t port)
@@ -30,6 +31,11 @@ void CSimpleMetadataUserSocketInformation::startDiscovery(uint16_t port)
 void CSimpleMetadataUserSocketInformation::onSocketReadyRead()
 {
     emit userSocketReadyRead();
+}
+
+void CSimpleMetadataUserSocketInformation::onSocketError(QAbstractSocket::SocketError error)
+{
+    emit userSocketError(error);
 }
 
 void CSimpleMetadataUserSocketInformation::onDiscoverySuccessful(DiscoveryResult result)
@@ -48,9 +54,13 @@ CSimpleMetadataServer::CSimpleMetadataServer(QObject* parent, uint16_t port)
     : IMetadataServer(parent, port)
 {
     m_Server = new QTcpServer(parent);
-
     QObject::connect(m_Server, &QTcpServer::newConnection, this, &CSimpleMetadataServer::onIncommingConnection);
     m_Server->listen(QHostAddress::Any, port);
+
+    m_ServerHeatbeatTimer.setInterval(5000);
+    m_ServerHeatbeatTimer.setSingleShot(false);
+    m_ServerHeatbeatTimer.start(5000);
+    QObject::connect(&m_ServerHeatbeatTimer, &QTimer::timeout, this, &CSimpleMetadataServer::onHeartbeatTimerTimeout);
 }
 
 void CSimpleMetadataServer::createChannel(QString name, QString password)
@@ -165,14 +175,56 @@ void CSimpleMetadataServer::handleOverviewAction(CSimpleMetadataUserSocketInform
     writeToSocket(info->socket(), ovRes);
 }
 
+void CSimpleMetadataServer::handleDisconnectAction(CSimpleMetadataUserSocketInformation *info, QDataStream &stream)
+{
+    if (info->state() != CSimpleMetadataUserSocketInformation::UserState::VALID || info->channel() == "")
+        return;
+
+    ChannelMetadata* channel = getChannel(info->channel());
+    if (channel == nullptr)
+        return;
+
+    info->setChannel("");
+    channel->joinedUsers.remove(info->username());
+
+    ClientDisconnectedFromChannelNotification noti;
+    noti.affectedChannel = *channel;
+    noti.affectedUser = info->metadata();
+    sendToAllClients(noti);
+}
+
 void CSimpleMetadataServer::onIncommingConnection()
 {
     QTcpSocket *socket = m_Server->nextPendingConnection();
     CSimpleMetadataUserSocketInformation *info = new CSimpleMetadataUserSocketInformation(this, socket);
 
     QObject::connect(info, &CSimpleMetadataUserSocketInformation::userSocketReadyRead, this, &CSimpleMetadataServer::userSocketReayRead);
+    QObject::connect(info, &CSimpleMetadataUserSocketInformation::userSocketError, this, &CSimpleMetadataServer::onUserSocketError);
 
     m_ConnectedClients.append(info);
+}
+
+void CSimpleMetadataServer::onUserSocketError(QAbstractSocket::SocketError error)
+{
+    CSimpleMetadataUserSocketInformation *info = qobject_cast<CSimpleMetadataUserSocketInformation*>(sender());
+    m_ConnectedClients.removeAll(info);
+
+    if (info->channel() != "")
+    {
+        ChannelMetadata* md = getChannel(info->channel());
+        md->joinedUsers.remove(info->username());
+
+        if (md != nullptr)
+        {
+            ClientDisconnectedFromChannelNotification noti;
+            noti.affectedUser = info->metadata();
+            noti.affectedChannel = *md;
+
+            sendToAllClients(noti);
+        }
+    }
+
+    info->deleteLater();
 }
 
 void CSimpleMetadataServer::userSocketReayRead()
@@ -188,11 +240,12 @@ void CSimpleMetadataServer::userSocketReayRead()
 
         if (action == "identification")
             handleIdentificationAction(info, stream);
-        // Client möchte sich verbinden, starte UDP Hole Punching
         else if (action == "connect")
             handleConnectAction(info, stream);
         else if (action == "overview")
             handleOverviewAction(info, stream);
+        else if (action == "disconnect")
+            handleDisconnectAction(info, stream);
     }
 }
 
@@ -216,5 +269,14 @@ void CSimpleMetadataServer::onClientDiscoverySuccessful(DiscoveryResult result)
     sendToAllClients(noti);
 
     qDebug() << "All data written";
+}
+
+void CSimpleMetadataServer::onHeartbeatTimerTimeout()
+{
+    for (auto &info : m_ConnectedClients)
+    {
+        info->socket()->write(QByteArray());
+        qDebug() << "BEAT!";
+    }
 }
 // ------------------------------------------------------------------------------------------------------------------

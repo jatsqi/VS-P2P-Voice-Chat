@@ -6,6 +6,7 @@
 
 #include <QObject>
 #include <QHostAddress>
+#include <QTimer>
 // ------------------------------------------------------------------------------------------------------------------
 class QTcpServer;
 class CUdpHolePunchingServer;
@@ -59,10 +60,12 @@ public:
 
 public slots:
     void onSocketReadyRead();
+    void onSocketError(QAbstractSocket::SocketError error);
     void onDiscoverySuccessful(DiscoveryResult result);
 
 signals:
     void userSocketReadyRead();
+    void userSocketError(QAbstractSocket::SocketError error);
     void discoverySuccessful(DiscoveryResult result);
 
 private:
@@ -111,13 +114,17 @@ private:
     void handleIdentificationAction(CSimpleMetadataUserSocketInformation *info, QDataStream &stream);
     void handleConnectAction(CSimpleMetadataUserSocketInformation *info, QDataStream &stream);
     void handleOverviewAction(CSimpleMetadataUserSocketInformation *info, QDataStream &stream);
+    void handleDisconnectAction(CSimpleMetadataUserSocketInformation *info, QDataStream &stream);
 
-public slots:
+private slots:
     void onIncommingConnection();
+    void onUserSocketError(QAbstractSocket::SocketError error);
     void userSocketReayRead();
     void onClientDiscoverySuccessful(DiscoveryResult result);
+    void onHeartbeatTimerTimeout();
 
 private:
+    QTimer m_ServerHeatbeatTimer{this};
     QTcpServer* m_Server;
     QList<CSimpleMetadataUserSocketInformation*> m_ConnectedClients;
     QMap<QString, ChannelMetadata> m_OwnedChannels;
