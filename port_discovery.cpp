@@ -25,6 +25,7 @@ void CUdpHolePunchingServer::onSocketReadyRead()
 
         m_Socket->writeDatagram(QByteArray(), datagram.senderAddress(), datagram.senderPort());
         qDebug() << "Discovered " << result.address << " " << result.port;
+        m_Socket->close();
         emit clientDiscovered(result);
     }
 }
@@ -37,6 +38,8 @@ void CUdpHolePunchingClient::start()
 
     QByteArray emptyPackage;
     m_Socket->writeDatagram(emptyPackage, host(), destinationPort());
+    m_Socket->flush();
+    m_Socket->close();
 }
 
 void CUdpHolePunchingClient::onSocketReadyRead()
