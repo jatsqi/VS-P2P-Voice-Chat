@@ -24,6 +24,7 @@ struct ChannelMetadata
 {
     QString channelName;
     QString password;
+    QMap<QString, UserMetadata> joinedUsers;
 };
 // ------------------------------------------------------------------------------------------------------------------
 inline QDataStream& operator<<(QDataStream &stream, const UserMetadata& md)
@@ -39,11 +40,13 @@ inline QDataStream& operator>>(QDataStream &stream, UserMetadata& md)
 inline QDataStream& operator<<(QDataStream &stream, const ChannelMetadata& md)
 {
     stream << md.channelName;
+    stream << md.joinedUsers;
     return stream;
 }
 inline QDataStream& operator>>(QDataStream &stream, ChannelMetadata& md)
 {
     stream >> md.channelName;
+    stream >> md.joinedUsers;
     return stream;
 }
 // ------------------------------------------------------------------------------------------------------------------
@@ -75,7 +78,8 @@ enum class StatusCode
 {
     SUCCESS = 0,
     CHANNEL_NOT_FOUND,
-    CHANNEL_WRONG_PASSWORD
+    CHANNEL_WRONG_PASSWORD,
+    CLIENT_NAME_DUPLICATED
 };
 static QString statusCodeToMessage(StatusCode code)
 {
@@ -84,6 +88,7 @@ static QString statusCodeToMessage(StatusCode code)
     case StatusCode::SUCCESS: return "Erfolg.";
     case StatusCode::CHANNEL_NOT_FOUND: return "Der Channel exisitiert nicht.";
     case StatusCode::CHANNEL_WRONG_PASSWORD: return "Das Passwort ist falsch.";
+    case StatusCode::CLIENT_NAME_DUPLICATED: return "Dieser Benutzername wird bereits verwendet.";
     }
 
     return "Nicht behandelter Status Code.";
@@ -230,17 +235,20 @@ inline QDataStream& operator>>(QDataStream &stream, PortDiscoveryRequest& reques
 // ------------------------------------------------------------------------------------------------------------------
 struct ClientJoinedChannelNotification
 {
+    ChannelMetadata updatedChannel;
     UserMetadata joinedUser;
 };
 inline QDataStream& operator<<(QDataStream &stream, const ClientJoinedChannelNotification& noti)
 {
     stream << QString("client_joined");
     stream << noti.joinedUser;
+    stream << noti.updatedChannel;
     return stream;
 }
 inline QDataStream& operator>>(QDataStream &stream, ClientJoinedChannelNotification& noti)
 {
     stream >> noti.joinedUser;
+    stream >> noti.updatedChannel;
     return stream;
 }
 // ------------------------------------------------------------------------------------------------------------------
@@ -272,6 +280,8 @@ inline QDataStream& operator<<(QDataStream &stream, const OverviewResponse& resp
 }
 inline QDataStream& operator>>(QDataStream &stream, OverviewResponse& response)
 {
+    stream >> response.isConnectedToChannel >> response.currentChannel;
+    stream >> response.channels >> response.users;
     return stream;
 }
 // ------------------------------------------------------------------------------------------------------------------

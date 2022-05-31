@@ -55,7 +55,7 @@ public:
         return md;
     }
 
-    void startDiscovery();
+    void startDiscovery(uint16_t port);
 
 public slots:
     void onSocketReadyRead();
@@ -83,13 +83,8 @@ public:
     virtual void createChannel(QString name, QString password);
     virtual QList<ChannelMetadata> channels() const;
 
-    ChannelMetadata* getChannel(QString name)
-    {
-        if (m_OwnedChannels.contains(name))
-            return &m_OwnedChannels.find(name).value();
-
-        return nullptr;
-    }
+    ChannelMetadata* getChannel(QString name);
+    CSimpleMetadataUserSocketInformation* findInfoWithUsername(QString name);
 
 private:
     template<typename T>
@@ -112,6 +107,10 @@ private:
                 writeToSocket(socket->socket(), data);
         }
     }
+
+    void handleIdentificationAction(CSimpleMetadataUserSocketInformation *info, QDataStream &stream);
+    void handleConnectAction(CSimpleMetadataUserSocketInformation *info, QDataStream &stream);
+    void handleOverviewAction(CSimpleMetadataUserSocketInformation *info, QDataStream &stream);
 
 public slots:
     void onIncommingConnection();

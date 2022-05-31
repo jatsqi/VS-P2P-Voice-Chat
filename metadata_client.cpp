@@ -4,17 +4,18 @@
 #include "metadata_client.h"
 #include "metadata.h"
 #include "port_discovery.h"
+#include "random_helper.h"
 
 #include <QTcpSocket>
 // ------------------------------------------------------------------------------------------------------------------
 IMetadataClient::IMetadataClient(QObject *parent, QString username, QHostAddress serverHost, uint16_t serverPort)
     : QObject(parent), m_Username(username), m_ServerHost(serverHost), m_ServerPort(serverPort)
 {
-
+    qDebug() << "INIT CLIENT WITH USERNAME " << username;
 }
 // ------------------------------------------------------------------------------------------------------------------
 CLanMetadataClient::CLanMetadataClient(QObject* parent, QString username, QHostAddress serverHost, uint16_t serverPort)
-    : IMetadataClient(parent, username, serverHost, serverPort)
+    : IMetadataClient(parent, username, serverHost, serverPort), m_PreferredVoicePort(35006)
 {
     m_Socket = new QTcpSocket(parent);
 
@@ -49,14 +50,13 @@ void CLanMetadataClient::connect()
     writeToSocket(m_Socket, request);
 }
 
-QList<UserMetadata> CLanMetadataClient::usersInCurrentChannel()
+const ChannelMetadata* CLanMetadataClient::currentChannel() const
 {
+    auto it = m_CachedChannels.find(m_CurrentChannelName);
+    if (it == m_CachedChannels.end())
+        return nullptr;
 
-}
-
-ChannelMetadata* CLanMetadataClient::currentChannel() const
-{
-
+    return &it.value();
 }
 
 QList<ChannelMetadata> CLanMetadataClient::channels() const
@@ -69,14 +69,21 @@ ChannelMetadata CLanMetadataClient::channel(QString name) const
     return m_CachedChannels.value(name);
 }
 
+uint16_t CLanMetadataClient::prefferedVoicePort() const
+{
+    return m_PreferredVoicePort;
+}
+
 void CLanMetadataClient::onSocketReadyRead()
 {
+    qDebug() << "Socket is ready read on client.";
     QDataStream stream(m_Socket);
 
     QString action;
     while (m_Socket->bytesAvailable() > 0)
     {
         stream >> action;
+        qDebug() << "Executing action on client " << action;
 
         if (action == "identification")
         {
@@ -95,38 +102,56 @@ void CLanMetadataClient::onSocketReadyRead()
             PortDiscoveryRequest portDisc;
             stream >> portDisc;
 
-            m_HolePunchClient = new CUdpHolePunchingClient(this, host(), portDisc.discoveryPort, 31313);
+            uint16_t localPunchingBindPort = randomPort();
+            m_PreferredVoicePort = localPunchingBindPort;
+            m_HolePunchClient = new CUdpHolePunchingClient(this, host(), portDisc.discoveryPort, localPunchingBindPort);
             m_HolePunchClient->start();
         }
         else if (action == "connect")
         {
+            delete m_HolePunchClient;
+
             ChannelConnectResponse connResp;
             stream >> connResp;
 
             if (connResp.code == StatusCode::SUCCESS)
             {
-                m_CurrentChannel = connResp.connectedChannel;
+                m_CachedChannels.insert(connResp.connectedChannel.channelName, connResp.connectedChannel);
+                m_CurrentChannelName = connResp.connectedChannel.channelName;
                 emit connectionSuccessful();
             }
             else
+            {
                 emit connectionFailed(connResp.message);
+            }
         }
         else if (action == "client_joined")
         {
             ClientJoinedChannelNotification noti;
             stream >> noti;
 
+            m_CachedChannels.insert(noti.updatedChannel.channelName, noti.updatedChannel);
+
             if (noti.joinedUser.username != username())
             {
-                m_CachedClients.insert(noti.joinedUser.username, noti.joinedUser);
-                emit currentChannelUpdated();
-                qDebug() << "New Client joined: " << noti.joinedUser.username;
+                qDebug() << "New user joined: " << noti.joinedUser.username;
             }
-                else
+            else
+            {
                 qDebug() << "Server notified me that I joined, ignoring...";
+            }
+
+            qDebug() << "Because a client joined, this is the complete list: ";
+            for (const auto& a : noti.updatedChannel.joinedUsers) {
+                qDebug() << "    " << a.username;
+            }
+
+            emit currentChannelUpdated();
+            emit channelsUpdated();
         }
         else if (action == "overview")
         {
+            qDebug() << "Overview received.";
             OverviewResponse ovRes;
             stream >> ovRes;
 
@@ -136,10 +161,12 @@ void CLanMetadataClient::onSocketReadyRead()
                 qDebug() << "Found channel: " << md.channelName;
                 m_CachedChannels.insert(md.channelName, md);
             }
+
+            emit channelsUpdated();
         }
         else
         {
-            qDebug() << "??????";
+            qDebug() << "Unbekannte Aktion empfangen: " << action;
         }
     }
 }
