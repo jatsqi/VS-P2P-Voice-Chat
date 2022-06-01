@@ -83,6 +83,11 @@ inline QDataStream& operator>>(QDataStream &stream, ChannelConnectRequest& reque
 
 ![Identification](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/jatsqi/VS-P2P-Voice-Chat/master/uml/seqIdent.puml&fmt=svg)
 
+## Beispielhafter Ablauf des Beitreten zu einem Channel (stark vereinfacht, einige Komponenten nicht beachtet)
+
+![Identification](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/jatsqi/VS-P2P-Voice-Chat/master/uml/seqJoinChannel.puml&fmt=svg)
+
+
 ## Kurzbeschreibung der Source-Dateien
 
 | Datei  | Beschreibung  |
