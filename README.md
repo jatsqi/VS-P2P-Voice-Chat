@@ -81,3 +81,17 @@ inline QDataStream& operator>>(QDataStream &stream, ChannelConnectRequest& reque
 
 ## Beispielhafter Ablauf der Identifizierung
 
+## Kurzbeschreibung der Source-Dateien
+
+| Datei  | Beschreibung  |
+|---|---|
+|   |   |
+|   |   |
+|   |   |
+|   |   |
+|   |   |
+|   |   |
+|   |   |
+|   |   |
+|   |   |
+|   |   |
