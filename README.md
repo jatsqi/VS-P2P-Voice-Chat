@@ -81,6 +81,8 @@ inline QDataStream& operator>>(QDataStream &stream, ChannelConnectRequest& reque
 
 ## Beispielhafter Ablauf der Identifizierung
 
+![Identification](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/jatsqi/VS-P2P-Voice-Chat/master/uml/seqIdent.puml&fmt=svg)
+
 ## Kurzbeschreibung der Source-Dateien
 
 | Datei  | Beschreibung  |
