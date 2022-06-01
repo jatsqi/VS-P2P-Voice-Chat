@@ -79,6 +79,7 @@ enum class StatusCode
     SUCCESS = 0,
     CHANNEL_NOT_FOUND,
     CHANNEL_WRONG_PASSWORD,
+    CHANNEL_MAX_USERS_REACHED,
     CLIENT_NAME_DUPLICATED
 };
 static QString statusCodeToMessage(StatusCode code)
@@ -88,6 +89,7 @@ static QString statusCodeToMessage(StatusCode code)
     case StatusCode::SUCCESS: return "Erfolg.";
     case StatusCode::CHANNEL_NOT_FOUND: return "Der Channel exisitiert nicht.";
     case StatusCode::CHANNEL_WRONG_PASSWORD: return "Das Passwort ist falsch.";
+    case StatusCode::CHANNEL_MAX_USERS_REACHED: return "Dieser Channel ist voll.";
     case StatusCode::CLIENT_NAME_DUPLICATED: return "Dieser Benutzername wird bereits verwendet.";
     }
 

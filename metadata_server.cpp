@@ -135,6 +135,8 @@ void CSimpleMetadataServer::handleConnectAction(CSimpleMetadataUserSocketInforma
     {
         if (channel->password != connReq.password)
             connectResponse.code = StatusCode::CHANNEL_WRONG_PASSWORD;
+        else if (channel->joinedUsers.size() >= 2)
+            connectResponse.code = StatusCode::CHANNEL_MAX_USERS_REACHED;
     }
     else
     {
