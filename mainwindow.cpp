@@ -92,8 +92,8 @@ void MainWindow::onJoinChannelRequest(QString channel, QString password)
 
 void MainWindow::initAudio()
 {
-    m_AudioFormat.setChannelCount(2);
-    m_AudioFormat.setSampleRate(16000);
+    m_AudioFormat.setChannelCount(1);
+    m_AudioFormat.setSampleRate(4000);
     m_AudioFormat.setSampleFormat(QAudioFormat::Int16);
 
     if (m_VoiceClient != nullptr)
@@ -110,7 +110,7 @@ void MainWindow::initAudio()
     m_VoiceClient->open(QIODevice::ReadWrite);
 
     m_AudioOutput = new QAudioSink(QMediaDevices::defaultAudioOutput(), m_AudioFormat, this);
-    m_AudioOutput->setVolume(20);
+    m_AudioOutput->setVolume(30);
 
     m_AudioInput = new QAudioSource(QMediaDevices::defaultAudioInput(), m_AudioFormat, this);
     m_AudioInput->start(m_VoiceClient);

@@ -1,0 +1,26 @@
+@startuml
+actor User
+participant MainWindow
+participant MetadataClient
+participant MetadataServer
+
+User -> MainWindow ++: Click Connect Button
+
+create MetadataClient
+MainWindow -> MetadataClient: new
+create MetadataServer
+MainWindow -> MetadataServer: new
+
+MainWindow -\\ MetadataClient ++: connect()
+
+MetadataClient -\\ MetadataServer ++: Send Identification Request
+MetadataClient <-- MetadataServer: Send Identification Response
+
+MainWindow <-- MetadataClient --: onIdentificationSuccessful()
+User <-- MainWindow --: Switch to Overview Widget
+
+MetadataClient <-- MetadataServer --++: Send Overview of Server (Channels, Users)
+MainWindow <-- MetadataClient --++: onChannelsUpdated()
+User <-- MainWindow --: Update Channels
+
+@enduml

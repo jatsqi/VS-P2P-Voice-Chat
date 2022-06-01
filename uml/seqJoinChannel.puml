@@ -1,0 +1,26 @@
+@startuml
+actor User
+participant MainWindow
+participant MetadataClient
+participant MetadataServer
+participant HolePunchingServer
+participant HolePunchingClient
+collections ConnectedClients
+
+User -> MainWindow ++: Click Join Button on Channel
+    MainWindow -\\ MetadataClient ++: joinChannel()
+        MetadataClient -\\ MetadataServer ++: Send Connect Request
+            create HolePunchingServer
+            MetadataServer -> HolePunchingServer: new 
+            
+            MetadataClient <-- MetadataServer ++: Send Port Discovery Request
+                create HolePunchingClient
+                MetadataClient -> HolePunchingClient --++: new
+                HolePunchingServer \\- HolePunchingClient --++: Send UDP Package 
+                MetadataServer <- HolePunchingServer --: Extract Port and Host of Client (Port opened by NAT)
+                ConnectedClients \\- MetadataServer: Send Host + Port of new Client to\n other client in same channel 
+                MetadataClient <- MetadataServer --: Connection Successful\n(Updated Channel, Host + Port of other Clients)
+                MainWindow <- MetadataClient --: currentChannelUpdated()
+                User <- MainWindow --: Update Current Channel UI
+
+@enduml
