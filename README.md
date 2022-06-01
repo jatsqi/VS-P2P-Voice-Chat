@@ -85,13 +85,14 @@ inline QDataStream& operator>>(QDataStream &stream, ChannelConnectRequest& reque
 
 | Datei  | Beschreibung  |
 |---|---|
-|   |   |
-|   |   |
-|   |   |
-|   |   |
-|   |   |
-|   |   |
-|   |   |
-|   |   |
-|   |   |
-|   |   |
+| channel_overview_widget  | Beinhaltet das Widget, welches die Übersicht über alle Channel darstellt.  |
+| channel_widget | Beinhaltet das Widget, welches einen einzelnen Channel inklusive aller beigetretener User darstellt. |
+| connect_remote_widget  | Beinhaltet das Widget, welches Eingabe wie z.B. IP/Port/Username etc. annimmt.  |
+| main  | Main Methode. |
+| mainwindow  | Vereint die anderen Widgets in einer Klasse + Handelt Erstellung von Metadaten-Server, Metadaten-Client + Voice-Client.  |
+| **metadata**  | Beinhaltet die Definition aller Metadaten / Request bzw. Response Pakete.  |
+| metadata_client  | Der Client, der sich zum Metadaten-Server verbindet, um Metadaten per TCP auszutauschen.  |
+| metadata_server  | Der Server, welche das Handling von Metadaten per TCP abwickelt.  |
+| port_discovery  | Beinhaltet sämtliche Utility Klassen für UDP Hole Punching.  |
+| random_helper  | Kleinere Hilfsfunktionen.  |
+| voice_client | Handelt das Senden/Empfangen von UDP Voice-Paketen.  |
