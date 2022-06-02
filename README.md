@@ -19,6 +19,7 @@ Bevor der eigentliche Aufbau bzw. die Entwicklung im Detail besprochen wird, kur
 - _Entwicklungszeit_: ca. 35h, ähnlich der Schätzung aus der Vorlesung
   - Die 35h setzen sich in etwa zusammen aus 5-6h Recherche, der Rest war die Einarbeitung in das Framework Qt und die Realisierung der Rechercheergebnisse
 - _Framework_: Da das Projekt eine GUI aufweist und **komplett** in C++ geschrieben wurde, habe ich mich für das Framework **Qt** entschieden. Es bietet neben GUI Elementen auch zahlreiche Tools für Netzwerkschnittstellen an und vereinfacht die Entwicklung in dieser hinsicht deutlich!
+- _Testsystem_: Getestet wurde die Anwendung primär auf zwei Systemen mit Windows 10. Während des Tests verlief sowohl der Metadaten-Austausch als auch der Austausch der Voice-Pakete reibungslos. Beim Testen auf zwei Linux Systemen kam es, je nach Distro zu kleineren bis größeren Problemen, besonders bei der Audio-Qualität. Teilweise waren heftige Störgeräusche wahrnehmbar, was sich eventuell auf die Neuheit des Multimedia-Moduls in Qt 6 zurückführen lässt, als auch auf eventuell Probleme beim Buffering. Da die Projektzeit mit ca. 35h für eine Person bereits deutlich erreicht wurde, konnte ich auch aufgrund anderer Projekte (Bachelorarbeit...) keine weitere Zeit in das Bug-Fixing investieren :(. 
 
 ## Verwendete Tools
 
@@ -84,6 +85,23 @@ inline QDataStream& operator>>(QDataStream &stream, ChannelConnectRequest& reque
     return stream;
 }
 ```
+## Austausch der Sprachpakete
+
+Die Sprachpakete selbst werden über UDP ausgetauscht. Der Metadaten-Server vermittelt dabei zwischen den Clients und tauscht sowohl deren IP als auch deren Port aus.
+Jeder Client hört dabei **einen** UDP-Port ab. Somit müssen, falls mehrere Clients verbunden wären und an diesen Port senden würden, die Pakete wieder voneinander getrennt werden und entsprechend zusammen abgespielt werden.
+In der aktuellen Version wird deshalb bereits der Username, von dem das UDP Paket kommt, vorne an die eigentliche PCM-Payload angehangen, um dies in Zukunft zu ermöglichen.
+Die Pakete werden noch **nicht** voneinander getrennt bzw. gleichzeitig abgespielt, weswegen aktuell jeder Client mit genau einem anderen Client sprechen kann.
+
+Jeder Client besitzt, um Unregelmäßigkeiten in der Anzahl der Empfangenen Pakete zu vermeiden, einen lokalen Buffer.
+Dieser Buffer - auch _Jitter Buffer_ genannt - speichert genau eine Sekunde an Voice-Daten zwischen, bevor diese an die Ausgabe übergeben werden.
+Da die PCM Daten aktuell **unkomprimiert** übertragen werden, wurde die Sprachqualität entsprechend angepasst, um zu große Datenmengen zu vermeiden:
+
+* Channels: 1 (Mono)
+* Abtastrate in Hz: 4000
+* Größe pro Sample: 2 Byte (16 Bit)
+
+In Zukunft soll das sehr bekannte Encoding namens _Opus_ eingesetzt werden, was u.a. in erfolgreichen Applikationen wie z.B. Discord eingesetzt wird.
+Opus ist eine Verlustbehaftete Kodierung, erreicht allerdings akzeptable Sprachqualität.
 
 ## Beispielhafter Ablauf der Identifizierung
 
