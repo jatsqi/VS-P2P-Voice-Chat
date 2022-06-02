@@ -54,7 +54,7 @@ void CChannelOverviewWidget::initUi()
     m_UpdateButton = new QPushButton(this);
     m_UpdateButton->setText("Aktualisieren");
     QObject::connect(m_UpdateButton, &QPushButton::pressed, [this](){ emit updateRequested(); });
-    m_Layout->addWidget(m_UpdateButton);
+    //m_Layout->addWidget(m_UpdateButton);
 
     rebuildChannelWidgets();
 
