@@ -106,6 +106,8 @@ void CLanMetadataClient::handlePortDiscoveryAction(QDataStream &stream)
 
     uint16_t localPunchingBindPort = randomPort();
     m_PreferredVoicePort = localPunchingBindPort;
+
+    // Lese Port für Hole Punching aus und erstelle Punching-Client
     m_HolePunchClient = new CUdpHolePunchingClient(this, host(), portDisc.discoveryPort, localPunchingBindPort);
     m_HolePunchClient->start();
 }
@@ -200,6 +202,7 @@ void CLanMetadataClient::onSocketReadyRead()
 
 void CLanMetadataClient::onSocketError(QAbstractSocket::SocketError socketError)
 {
+    // Gibt Error an UI weiter, siehe dazu QObject::connect in mainwindow.cpp
     emit serverConnectionError(socketError);
 }
 // ------------------------------------------------------------------------------------------------------------------

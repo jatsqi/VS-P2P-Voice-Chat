@@ -23,6 +23,7 @@ void CSimpleMetadataUserSocketInformation::startDiscovery(uint16_t port)
     m_State = UserState::WAITING_FOR_DISCOVERY;
     m_LastDiscoveryResult = DiscoveryResult();
 
+    // Start Hole Punching "Server"
     m_HolePunchingServer = new CUdpHolePunchingServer(this, port);
     QObject::connect(m_HolePunchingServer, &CUdpHolePunchingServer::clientDiscovered, this, &CSimpleMetadataUserSocketInformation::onDiscoverySuccessful);
     m_HolePunchingServer->start();
@@ -43,10 +44,8 @@ void CSimpleMetadataUserSocketInformation::onDiscoverySuccessful(DiscoveryResult
     m_State = UserState::VALID;
     m_LastDiscoveryResult = result;
 
-    qDebug() << "Pre delete...";
     m_HolePunchingServer->deleteLater();
     m_HolePunchingServer = nullptr;
-    qDebug() << "Deleted punching server...";
     emit discoverySuccessful(result);
 }
 // ------------------------------------------------------------------------------------------------------------------

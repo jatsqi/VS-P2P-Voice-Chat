@@ -35,6 +35,7 @@ qint64 CVoiceClient::writeData(const char *data, qint64 len)
     stream << m_MetadataClient->username();
     stream << QByteArray(data, len);
 
+    // Loop über alle User im aktuellen Channel (aktuell maximal ein Client)
     for(auto &a : currentChannel->joinedUsers)
     {
         if (a.username == m_MetadataClient->username())
@@ -48,6 +49,7 @@ qint64 CVoiceClient::writeData(const char *data, qint64 len)
         if (destination.isLoopback())
             destination = m_MetadataClient->host();
 
+        // Sende Daten an anderen Client
         m_Socket->writeDatagram(output, a.host, a.port);
     }
 
@@ -61,15 +63,19 @@ uint16_t CVoiceClient::port() const
 
 void CVoiceClient::onSocketReadyRead()
 {
+    // Solange eingehende Datagramme erkannt
     while (m_Socket->hasPendingDatagrams())
     {
+        // Datagramm lesen
         QNetworkDatagram dg = m_Socket->receiveDatagram();
         QByteArray data = dg.data();
         QDataStream stream(data);
 
+        // Von wem kommen die Daten => vorbereitung für mehr als ein weiterer Client im Channel
         QString username;
         stream >> username;
 
+        // PCM Daten speichern
         QByteArray voiceData;
         stream >> voiceData;
 
@@ -77,6 +83,8 @@ void CVoiceClient::onSocketReadyRead()
         qDebug() << "Received voice from " << username << " with size " << voiceData.size() << " rdbuffer: " << m_ReadBuffer.size();
 
         emit readyRead();
+
+        // Dieses Signal ist aktuell ungenutzt
         if (m_ReadBuffer.size() > m_Format.bytesForDuration(1000000)) {
             emit voiceDataReady();
         }

@@ -27,6 +27,10 @@ private:
     uint16_t m_Port;
 };
 // ------------------------------------------------------------------------------------------------------------------
+/*
+Diese Klasse stellt einen Wrapper um ein Socket (Client) dar, damit sich die Server-Klasse darum nicht kümmern muss.
+Die Klasse speichert auch den aktuellen Channel sowie den Usernamen
+*/
 class CSimpleMetadataUserSocketInformation : public QObject
 {
     Q_OBJECT

@@ -105,6 +105,7 @@ void MainWindow::onJoinChannelRequest(QString channel, QString password)
 
 void MainWindow::initAudio()
 {
+    // Format setzen
     m_AudioFormat.setChannelCount(2);
     m_AudioFormat.setSampleRate(8000);
     m_AudioFormat.setSampleFormat(QAudioFormat::Int16);
@@ -122,14 +123,18 @@ void MainWindow::initAudio()
     m_VoiceClient = new CVoiceClient(this, m_MetadataClient, m_AudioFormat);
     m_VoiceClient->open(QIODevice::ReadWrite);
 
+    // AudoSink erlaubt das Schreiben von rohen PCM Daten in das Output-Device
     m_AudioOutput = new QAudioSink(QMediaDevices::defaultAudioOutput(), m_AudioFormat, this);
     m_AudioOutput->setVolume(1);
     m_AudioOutput->setBufferSize(m_AudioFormat.bytesForDuration(1000000) * 2);
     QIODevice *outputDevice = m_AudioOutput->start();
 
+    // Mikrofon-Input
     m_AudioInput = new QAudioSource(QMediaDevices::defaultAudioInput(), m_AudioFormat, this);
     m_AudioInput->start(m_VoiceClient);
 
+    // m_PushTimer => holt sich jede Sekunde alle Daten aus dem Buffer -> soll Jittering verhindern, falls UDP
+    // Pakete nicht gleichmäßig ankommen, was zu erwarten ist.
     m_PushTimer.stop();
     m_PushTimer.setSingleShot(false);
     m_PushTimer.setInterval(1000);
