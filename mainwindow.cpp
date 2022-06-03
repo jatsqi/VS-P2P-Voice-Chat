@@ -98,8 +98,8 @@ void MainWindow::onJoinChannelRequest(QString channel, QString password)
 
 void MainWindow::initAudio()
 {
-    m_AudioFormat.setChannelCount(1);
-    m_AudioFormat.setSampleRate(4000);
+    m_AudioFormat.setChannelCount(2);
+    m_AudioFormat.setSampleRate(16000);
     m_AudioFormat.setSampleFormat(QAudioFormat::Int16);
 
     if (m_VoiceClient != nullptr)
@@ -116,14 +116,26 @@ void MainWindow::initAudio()
     m_VoiceClient->open(QIODevice::ReadWrite);
 
     m_AudioOutput = new QAudioSink(QMediaDevices::defaultAudioOutput(), m_AudioFormat, this);
-    m_AudioOutput->setVolume(30);
+    m_AudioOutput->setVolume(1);
+    m_AudioOutput->setBufferSize(m_AudioFormat.bytesForDuration(1000000) * 2);
+    QIODevice *outputDevice = m_AudioOutput->start();
 
     m_AudioInput = new QAudioSource(QMediaDevices::defaultAudioInput(), m_AudioFormat, this);
     m_AudioInput->start(m_VoiceClient);
-    QObject::connect(m_VoiceClient, &CVoiceClient::voiceDataReady, [this]() {
-        if (m_AudioOutput->state() != QAudio::ActiveState)
-        {
-            m_AudioOutput->start(m_VoiceClient);
+
+    m_PushTimer.stop();
+    m_PushTimer.setSingleShot(false);
+    m_PushTimer.setInterval(1000);
+    QObject::disconnect(&m_PushTimer);
+    QObject::connect(&m_PushTimer, &QTimer::timeout, [this, outputDevice]() {
+        quint64 len = m_AudioOutput->bytesFree();
+        qDebug() << len << " bytes free!";
+        QByteArray data(len, 0);
+        len = m_VoiceClient->read(data.data(), len);
+
+        if (len > 0) {
+            outputDevice->write(data, len);
         }
     });
+    m_PushTimer.start(1000);
 }

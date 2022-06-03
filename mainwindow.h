@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <QAudioFormat>
 #include <QAbstractSocket>
+#include <QTimer>
 // ------------------------------------------------------------------------------------------------------------------
 class CConnectRemoteWidget;
 class CSimpleMetadataServer;
@@ -44,6 +45,8 @@ private:
     CVoiceClient* m_VoiceClient;
     QAudioSink* m_AudioOutput;
     QAudioSource* m_AudioInput;
+
+    QTimer m_PushTimer {this};
 };
 // ------------------------------------------------------------------------------------------------------------------
 #endif // MAINWINDOW_H
