@@ -28,6 +28,24 @@ Bevor der eigentliche Aufbau bzw. die Entwicklung im Detail besprochen wird, kur
 - VS Code für alle Dokumente
 - PlantUML für alle UML Diagramme
 
+## Builden des Projektes
+
+```shell
+git clone https://github.com/jatsqi/VS-P2P-Voice-Chat
+cd VS-P2P-Voice-Chat
+mkdir build
+cd build
+cmake ..
+```
+
+Eventuell muss bei CMAKE noch die installierte Qt Version + Tool-Chain spezifiziert werden:
+
+`cmake -DCMAKE_PREFIX_PATH=<QT-Installation-Path-With-Toolchain> ..`
+
+Unter Windows könnte der Pfad beispielsweise so aussehen: `C:\Qt\6.3.0\mingw_64\`
+
+Der Ordner, in dem QT Installiert wird (z.B. Qt\6.3.0) könnte eventuell nicht ausreichen, deshalb die Tool-Chain anhängen (z.B. mingw_64)!
+
 ## Grober Aufbau der Anwendung
 
 Prinzipiell ist die Anwendung in zwei Teile zerlegt:
