@@ -143,6 +143,18 @@ Da die PCM Daten aktuell **unkomprimiert** übertragen werden, wurde die Sprachq
 In Zukunft soll das sehr bekannte Encoding namens _Opus_ eingesetzt werden, was u.a. in erfolgreichen Applikationen wie z.B. Discord eingesetzt wird.
 Opus ist eine Verlustbehaftete Kodierung, erreicht allerdings akzeptable Sprachqualität.
 
+## Aktuelle Implementierung des Bufferings
+
+Da bei keinem Netzwerk wirklich garantiert werden kann, alle Pakete in einer **konstanten** Rate am Ziel ankommen, müssen die Sprachpakete gepuffert werden,
+um plötzlicher aussetzer zu vermeiden. Dies erhöht natürlich die Latenz, was im Falle dieser Anwendung allerdings verkraftbar ist, sofern diese sich Rahmen hält.
+Aktuell wird versucht, immer **eine Sekunde** zu puffern und die in dieser Zeit angekommenen Daten gesammelt und somit mit einer konstanten Rate an den Audio-Output
+zu übergeben.
+Vor diesem Ansatz sah die Implementierung vor, genau eine Sekunde an **Audio-Daten** zusammen (also tatsächlich genug Daten zusammen, dass eine Sekunde an Audio abgespielt werden kann).
+Dies hat allerdings beio plötzlichen Sprechpausen dazu geführt, dass bei Wiederaufnahme Sprachsegmente abgespielt wurden, die teilweise sehr alt waren, da der Buffer z.B. nur bis zur Hälfe gefüllt war.
+Der aktuelle Ansatz liest jede Sekunde die vorhandenen Daten aus dem Puffer und schreibt sie in das Audio-Device (`mainwindow.cpp`, `initAudio()` Methode) (versenden/empfangen des Audios: `voice_client.cpp`).
+Dennoch hat sich auch mit diesem Ansatz herausgestellt, dass selbst kleine Gaps zu teilweise starken Störgeräuschen bzw. Artefakten führen können, weswegen dies in Zukunft noch ein wenig verbessert werden muss.
+Dies tritt auf, wenn genau eine Sekunde an Audio im Buffer liegt, die Sekunde abgespielt wurde und anschließend die nächste Sekunde geholt wird. IDiese kurze Latenz zwischen Neue Daten holen und die Daten in das Device schreiben, reicht bereits, um hörbare Gaps zu produzieren. 
+
 ## Beispielhafter Ablauf der Identifizierung
 
 ![Identification](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/jatsqi/VS-P2P-Voice-Chat/master/uml/seqIdent.puml&fmt=svg)
