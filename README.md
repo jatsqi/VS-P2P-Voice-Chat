@@ -46,6 +46,15 @@ Unter Windows könnte der Pfad beispielsweise so aussehen: `C:\Qt\6.3.0\mingw_64
 
 Der Ordner, in dem QT Installiert wird (z.B. Qt\6.3.0) könnte eventuell nicht ausreichen, deshalb die Tool-Chain anhängen (z.B. mingw_64)!
 
+Zum erfolgreichen Builden sind folgende Qt-Module erforderlich:
+
+* Qt-Core
+* Qt-Multimedia
+* Qt-Network
+* Qt-Widgets
+
+Da ich ausgiebig die recht neuen Multimedia-Features nutze, bitte darauf achten, dass Qt6 oder höher installiert ist!
+
 ## Grober Aufbau der Anwendung
 
 Prinzipiell ist die Anwendung in zwei Teile zerlegt:
