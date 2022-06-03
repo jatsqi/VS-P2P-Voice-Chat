@@ -51,6 +51,14 @@ public:
 
     uint16_t prefferedVoicePort() const;
 
+private:
+    void handleIdentificationAction(QDataStream &stream);
+    void handlePortDiscoveryAction(QDataStream &stream);
+    void handleConnectAction(QDataStream &stream);
+    void handleClientJoinedAction(QDataStream &stream);
+    void handleOverviewAction(QDataStream &stream);
+    void handleDisconnectAction(QDataStream &stream);
+
 public slots:
     void onSocketReadyRead();
     void onSocketError(QAbstractSocket::SocketError socketError);
@@ -62,6 +70,7 @@ signals:
     void connectionSuccessful(); // Wenn User erfolgreich Voice Channel betreten hat
     void connectionFailed(QString reason);
     void currentChannelUpdated(); // Wenn aktueller Channel aktualisiert wurde
+    void serverConnectionError(QAbstractSocket::SocketError socketError);
 
 private:
     uint16_t m_PreferredVoicePort;

@@ -8,11 +8,9 @@
 CVoiceClient::CVoiceClient(QObject* parent, CLanMetadataClient *metadataClient, QAudioFormat format)
     : QIODevice(parent), m_MetadataClient(metadataClient), m_Format(format)
 {
-    qDebug() << "Pre Bind";
     m_Socket = new QUdpSocket(this);
     QObject::connect(m_Socket, &QUdpSocket::readyRead, this, &CVoiceClient::onSocketReadyRead);
-    bool b = m_Socket->bind(port());
-    qDebug() << "Bind? " << b;
+    m_Socket->bind(port());
 }
 
 qint64 CVoiceClient::readData(char *data, qint64 maxlen)
@@ -41,10 +39,16 @@ qint64 CVoiceClient::writeData(const char *data, qint64 len)
     {
         if (a.username == m_MetadataClient->username())
            continue;
-        m_Socket->writeDatagram(output, a.host, a.port);
 
-        qDebug() << "Sending voice data to " << a.username << " (Host: " << a.host << ", Port: " << a.port << ")";
-        qDebug() << "I listen on port " << port();
+        // Dieser Fall tritt auf, wenn ein Client und der Server auf dem selben Host liegen
+        // Der Server broadcastet an alle anderen Clients die IP 127.0.0.1, was aus seiner Sicht
+        // der Client auf dem Host ist.
+        // Stattdessen wird die IP des Metadaten-Servers genutzt.
+        QHostAddress destination = a.host;
+        if (destination.isLoopback())
+            destination = m_MetadataClient->host();
+
+        m_Socket->writeDatagram(output, a.host, a.port);
     }
 
     return len;

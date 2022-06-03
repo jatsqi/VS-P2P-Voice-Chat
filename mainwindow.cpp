@@ -42,6 +42,7 @@ void MainWindow::onConnectButtonPressed()
     QObject::connect(m_MetadataClient, &CLanMetadataClient::connectionFailed, this, &MainWindow::onClientConnectFailed);
     QObject::connect(m_MetadataClient, &CLanMetadataClient::channelsUpdated, this, &MainWindow::onClientChannelsUpdated);
     QObject::connect(m_MetadataClient, &CLanMetadataClient::currentChannelUpdated, this, &MainWindow::onClientCurrentChannelUpdated);
+    QObject::connect(m_MetadataClient, &CLanMetadataClient::serverConnectionError, this, &MainWindow::onClientServerConnectionError);
     m_MetadataClient->connect();
 }
 
@@ -82,6 +83,11 @@ void MainWindow::onClientConnectSuccessful()
 void MainWindow::onClientConnectFailed(QString reason)
 {
     QMessageBox::critical(this, "Fehler beim Beitreten", reason);
+}
+
+void MainWindow::onClientServerConnectionError(QAbstractSocket::SocketError serverConnectionError)
+{
+    QMessageBox::critical(this, "Fehler in der Verbindung", "Es ist ein kritischer Fehler in der Verbindung mit dem Server aufgetreten.");
 }
 
 void MainWindow::onJoinChannelRequest(QString channel, QString password)

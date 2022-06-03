@@ -3,6 +3,7 @@
 // ------------------------------------------------------------------------------------------------------------------
 #include <QMainWindow>
 #include <QAudioFormat>
+#include <QAbstractSocket>
 // ------------------------------------------------------------------------------------------------------------------
 class CConnectRemoteWidget;
 class CSimpleMetadataServer;
@@ -26,6 +27,7 @@ private slots:
     void onClientCurrentChannelUpdated();
     void onClientConnectSuccessful();
     void onClientConnectFailed(QString reason);
+    void onClientServerConnectionError(QAbstractSocket::SocketError serverConnectionError);
     void onJoinChannelRequest(QString channel, QString password);
 
 private:
