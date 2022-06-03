@@ -17,9 +17,20 @@ Bevor der eigentliche Aufbau bzw. die Entwicklung im Detail besprochen wird, kur
 ## Projektkontext
 
 - _Entwicklungszeit_: ca. 35h, ähnlich der Schätzung aus der Vorlesung
-  - Die 35h setzen sich in etwa zusammen aus 5-6h Recherche, der Rest war die Einarbeitung in das Framework Qt und die Realisierung der Rechercheergebnisse
+  - Die 35h setzen sich in etwa zusammen aus 5-6h Recherche, der Rest war die Einarbeitung in das Framework Qt und die Realisierung der Rechercheergebnisse.
 - _Framework_: Da das Projekt eine GUI aufweist und **komplett** in C++ geschrieben wurde, habe ich mich für das Framework **Qt** entschieden. Es bietet neben GUI Elementen auch zahlreiche Tools für Netzwerkschnittstellen an und vereinfacht die Entwicklung in dieser hinsicht deutlich!
 - _Testsystem_: Getestet wurde die Anwendung primär auf zwei Systemen mit Windows 10. Während des Tests verlief sowohl der Metadaten-Austausch als auch der Austausch der Voice-Pakete reibungslos. Beim Testen auf zwei Linux Systemen kam es, je nach Distro zu kleineren bis größeren Problemen, besonders bei der Audio-Qualität. Teilweise waren heftige Störgeräusche wahrnehmbar, was sich eventuell auf die Neuheit des Multimedia-Moduls in Qt 6 zurückführen lässt, als auch auf eventuell Probleme beim Buffering. Da die Projektzeit mit ca. 35h für eine Person bereits deutlich erreicht wurde, konnte ich auch aufgrund anderer Projekte (Bachelorarbeit...) keine weitere Zeit in das Bug-Fixing investieren :(. 
+
+## Featureübersicht
+
+* Benutzername ist konfigurierbar
+* IP/Port konfigurierbar, jeweils vom Client, der sich connecten möchte, als auch vom lokalen Server (falls gestartet wird).
+* Auf dem Server können (aktuell noch hard-coded), mehrere Channel für jeweils zwei Clients erstellt werden.
+* UDP Holepunching ist implementiert und theoretisch funktionsfähig, allerdings konnte ich kein Testsystem zusammenbauen, um es zu testen.
+* Channel können beliebig betreten bzw. verlassen werden.
+* Sprache wird per UDP ausgetaucht, der Server ist **NICHT** beteiligt.
+* Metadaten werden per TCP ausgetauscht. Dafür habe ich mir ein kleines und sehr simples Protokoll zum Austausch der Metadaten überlegt.
+* Rudimentärer Jitter Buffer zum Abfangen von unterschiedlichen Paketlaufzeiten (Wie lange die Pakete brauchen, um anzukommen).
 
 ## Verwendete Tools
 
@@ -60,7 +71,7 @@ Da ich ausgiebig die recht neuen Multimedia-Features nutze, bitte darauf achten,
 Prinzipiell ist die Anwendung in zwei Teile zerlegt:
 
 1. Der **Client**, der den Mikrofoninput an alle ihm bekannten anderen Clients per **UDP** schickt. UDP wurde hier gewählt, da es bei Audio-Paketen prinzipiell verkraftbar ist, wenn einige **wenige** nicht, oder in der falschen Reihenfolge ankommen. Der "normale" User wird von kleinen Aussetzern normalerweise nichts mitbekommen. Des Weiteren ist UDP durch seine verbindungslose Natur **deutlich** schneller und besitzt weniger Overhead.
-2. Ein **Metadatenserver**, der die Clients untereinander bekannt macht und das UDP Holepunching ermöglicht. Da für die Metadaten sowohl deren Reihenfolge wichtig ist, in der die Clients diese empfangen also die Sicherheit, dass diese ankommen, wird für den Austausch der Metadaten **TCP** genutzt. Wichtig hierbei ist, dass der Metadaten Server für alle Clients erreichbar sein muss, d.h. er darf sich z.B. nicht hinter einem NAT befinden. Die ursprüngliche Idee war eine baumartige Struktur für die Server: Jeder Client startet einen eigenen, lokalen Server und definiert einen optionalen "Upstream" Server, mitdem die Daten synchronisiert werden. Aufgrund der gesteigerten Komplexität wurde diese Idee allerdings schnell wieder verworfen.
+2. Ein **Metadatenserver**, der die Clients untereinander bekannt macht und das UDP Holepunching ermöglicht. Da für die Metadaten sowohl deren Reihenfolge wichtig ist, in der die Clients diese empfangen also die Sicherheit, dass diese ankommen, wird für den Austausch der Metadaten **TCP** genutzt. Wichtig hierbei ist, dass der Metadaten Server für alle Clients erreichbar sein muss, d.h. er darf sich z.B. nicht hinter einem NAT befinden. Die ursprüngliche Idee war eine baumartige Struktur für die Server: Jeder Client startet einen eigenen, lokalen Server und definiert einen optionalen "Upstream" Server, mitdem die Daten synchronisiert werden. Aufgrund der gesteigerten Komplexität wurde diese Idee allerdings schnell wieder verworfen.  Die aktuelle Architektur sieht vor, dass ein Client, der selber von allen anderen erreicht werden kann, den Server per GUI startet. Auf dem Server selbst sind im Code mehrere Channel erstellbar (siehe CSimpleMetadataServer#createChannel), zu denen sich jeweils zwei Clients connecten können.
 
 ### Protokoll zum Austausch der Metadaten
 
@@ -71,13 +82,12 @@ Je nach dem, wer ein Paket mit einer bestimmten Aktion empfängt, ist die Interp
 
 | Aktion  | Interpretation des Servers  | Interpretation des Clients  | Payload vom Server | Payload vom Client |
 |---|---|---|---|---|
-| connect  | Ein Client möchte einem bestimmten Voice-Channel beitreten.  | Der Server hat meine Anfrage auf Beitriff bearbeitet und antwortet mit einem Status-Code. |
-| identification  | Ein Client möchte sich mit einem Usernamen identifizieren.  | Der Server möche, dass ich mich mit einem Usernamen ausweise.  |
-| overview  | Ein Clients fordert eine Übersicht über alle Channels an.  | Ich fordere eine Übersicht über alle Channel an.  |
-| disconnect | Ein Client möchte einen Voice-Channel ordentlich verlassen. | Ich oder ein anderer Client hat einen Voice-Channel verlassen. |
-| client_joined | Ein Client möchte einem Voice-Channel beitreten. | Ich oder ein anderer Client trat einem Channel bei. |
-| | |
-| | |
+| connect  | Ein Client möchte einem bestimmten Voice-Channel beitreten.  | Der Server hat meine Anfrage auf Beitriff bearbeitet und antwortet mit einem Status-Code. | Status-Code. | Channel + Passwort. |
+| identification  | Ein Client möchte sich mit einem Usernamen identifizieren.  | Der Server möche, dass ich mich mit einem Usernamen ausweise.  | Leeres Paket. | Benutzername. |
+| overview  | Ein Clients fordert eine Übersicht über alle Channels an.  | Ich fordere eine Übersicht über alle Channel an.  | Übersicht über alle Channel + User. | Leere Payload. |
+| disconnect | Ein Client möchte einen Voice-Channel ordentlich verlassen. | Ich oder ein anderer Client hat einen Voice-Channel verlassen. | Betroffener Channel, Betroffener User. | Betroffener User, Betroffener Channel. | Leere Payload.
+| client_joined | Ein Client möchte einem Voice-Channel beitreten. | Ich oder ein anderer Client trat einem Channel bei. | Betroffener Channel, Betroffener User.  | - |
+| port_discovery | - | Der Server möchte prüfen, über welchen Port ich nach außen erreichbar bin (Vorbereitung UDP Hole Punching). Ich sende ein UDP Paket an den mitgelieferten Port. | - Port, zu dem der Client Paket schicken soll. | - |
 
 Beispielsweise ist die Payload der Aktion "connect", mit der ein Client einem bestimmten Voice-Channel beitreten kann, auf folgende Weise definiert:
 
@@ -123,8 +133,8 @@ Jeder Client besitzt, um Unregelmäßigkeiten in der Anzahl der Empfangenen Pake
 Dieser Buffer - auch _Jitter Buffer_ genannt - speichert genau eine Sekunde an Voice-Daten zwischen, bevor diese an die Ausgabe übergeben werden.
 Da die PCM Daten aktuell **unkomprimiert** übertragen werden, wurde die Sprachqualität entsprechend angepasst, um zu große Datenmengen zu vermeiden:
 
-* Channels: 1 (Mono)
-* Abtastrate in Hz: 4000
+* Channels: 2
+* Abtastrate in Hz: 8000
 * Größe pro Sample: 2 Byte (16 Bit)
 
 In Zukunft soll das sehr bekannte Encoding namens _Opus_ eingesetzt werden, was u.a. in erfolgreichen Applikationen wie z.B. Discord eingesetzt wird.

@@ -99,7 +99,7 @@ void MainWindow::onJoinChannelRequest(QString channel, QString password)
 void MainWindow::initAudio()
 {
     m_AudioFormat.setChannelCount(2);
-    m_AudioFormat.setSampleRate(16000);
+    m_AudioFormat.setSampleRate(8000);
     m_AudioFormat.setSampleFormat(QAudioFormat::Int16);
 
     if (m_VoiceClient != nullptr)

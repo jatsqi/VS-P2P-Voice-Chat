@@ -11,12 +11,6 @@
 #include <QFormLayout>
 #include <QCheckBox>
 #include <QMessageBox>
-
-#include <QAudioFormat>
-#include <QAudioSource>
-#include <QAudioOutput>
-#include <QMediaDevices>
-#include <QAudioSink>
 // ------------------------------------------------------------------------------------------------------------------
 CConnectRemoteWidget::CConnectRemoteWidget(QWidget *parent)
     : QWidget(parent)
@@ -24,57 +18,10 @@ CConnectRemoteWidget::CConnectRemoteWidget(QWidget *parent)
     initUi();
     m_EditUsername->setFocus();
 
-    m_EditUsername->setText("hello5");
+    /*m_EditUsername->setText("hello5");
     m_EditPort->setText("12345");
     m_EditIp->setText("127.000.000.001");
-    m_CheckBoxLocalServer->setChecked(true);
-
-    /*QAudioFormat format;
-    format.setSampleRate(8000);
-    format.setChannelCount(1);
-    format.setSampleFormat(QAudioFormat::Int16);
-    format = QMediaDevices::defaultAudioOutput().preferredFormat();
-
-    client = new CVoiceClient(this, nullptr, 21213, format);
-    client->open(QIODevice::ReadWrite);
-
-    source = new QAudioSource(QMediaDevices::defaultAudioInput(), format);
-    source->start(client);
-
-    sink = new QAudioSink(QMediaDevices::defaultAudioOutput(), format);
-    sink->setVolume(1);
-    //input = sink->start();
-
-    QObject::connect(client, &QIODevice::readyRead, [this]() {
-        if (sink->state() != QAudio::State::ActiveState)
-        {
-            sink->start(client);
-        }
-        /*QByteArray buffer(client->bytesAvailable(), 0);
-        qint64 l = client->read(buffer.data(), client->bytesAvailable());
-        if (l > 0) {
-            input->write(buffer);
-            qDebug() << "WRITTEN!";
-        } else {
-            qDebug() << "Sorry, l < 0 :(";
-        }
-
-        /*static const qint64 BufferSize = 4096;
-        const qint64 len = qMin(source->bytesAvailable(), BufferSize);
-
-        QByteArray buffer(len, 0);
-        qint64 l = input->read(buffer.data(), len);
-        if (l > 0) {
-            client->write(buffer);
-        } else {
-            qDebug() << "Sorry, l < 0 :(";
-        }
-    });
-
-    QObject::connect(sink, &QAudioSink::stateChanged, [](QAudio::State state)
-    {
-        qDebug() << "State changed to " << state;
-    });*/
+    m_CheckBoxLocalServer->setChecked(true);*/
 }
 
 CConnectRemoteWidget::~CConnectRemoteWidget()
