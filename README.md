@@ -6,6 +6,14 @@
 
 ![Password Widget](img/password.JPG)
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+**WICHTIG: DAS PASSWORT ZU DEN STANDARTCHANNELN IST "passwort"**
+
+Siehe dazu `m_MetadataServer->createChannel(name, passwort)` in `mainwindow.cpp`!
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 Mit diesem kleinen P2P Voice Chat Programm soll eine, jedenfalls was den Austausch der Sprache selbst angeht, ein serverloses Tool im Rahmen der Vorlesung "Verteilte Systeme" entwickelt werden.
 Bevor der eigentliche Aufbau bzw. die Entwicklung im Detail besprochen wird, kurz noch ein paar kleinere Anmerkungen:
 
