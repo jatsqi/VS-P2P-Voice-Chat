@@ -19,6 +19,9 @@ public:
 
     virtual void createChannel(QString name, QString password) = 0;
     virtual QList<ChannelMetadata> channels() const = 0;
+    virtual bool start() = 0;
+
+    uint16_t port() const { return m_Port; }
 
 private:
     uint16_t m_Port;
@@ -85,6 +88,7 @@ public:
 
     virtual void createChannel(QString name, QString password);
     virtual QList<ChannelMetadata> channels() const;
+    virtual bool start() override;
 
     ChannelMetadata* getChannel(QString name);
     CSimpleMetadataUserSocketInformation* findInfoWithUsername(QString name);

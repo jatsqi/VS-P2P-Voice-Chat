@@ -55,7 +55,6 @@ CSimpleMetadataServer::CSimpleMetadataServer(QObject* parent, uint16_t port)
 {
     m_Server = new QTcpServer(parent);
     QObject::connect(m_Server, &QTcpServer::newConnection, this, &CSimpleMetadataServer::onIncommingConnection);
-    m_Server->listen(QHostAddress::Any, port);
 
     m_ServerHeatbeatTimer.setInterval(5000);
     m_ServerHeatbeatTimer.setSingleShot(false);
@@ -79,6 +78,11 @@ void CSimpleMetadataServer::createChannel(QString name, QString password)
 QList<ChannelMetadata> CSimpleMetadataServer::channels() const
 {
     return this->m_OwnedChannels.values();
+}
+
+bool CSimpleMetadataServer::start()
+{
+    return m_Server->listen(QHostAddress::Any, port());
 }
 
 ChannelMetadata* CSimpleMetadataServer::getChannel(QString name)

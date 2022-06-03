@@ -27,6 +27,13 @@ void MainWindow::onConnectButtonPressed()
     {
         serverAddress = QHostAddress::LocalHost;
         m_MetadataServer = new CSimpleMetadataServer(this, serverPort);
+        if (!m_MetadataServer->start())
+        {
+            m_MetadataServer->deleteLater();
+            QMessageBox::critical(this, "Fehler beim Serverstart", "Der Server konnte sich nicht an den Port binden!");
+            return;
+        }
+
         m_MetadataServer->createChannel("Plaudern 1", "passwort");
         m_MetadataServer->createChannel("Plaudern 2", "passwort");
     }

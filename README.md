@@ -122,6 +122,9 @@ inline QDataStream& operator>>(QDataStream &stream, ChannelConnectRequest& reque
     return stream;
 }
 ```
+
+Dadruch ist es möglich, solche Payloads sehr einfach zu serialisieren bzw. zu de-serialiseren, was den Code **deutlich** lesbarer macht.
+
 ## Austausch der Sprachpakete
 
 Die Sprachpakete selbst werden über UDP ausgetauscht. Der Metadaten-Server vermittelt dabei zwischen den Clients und tauscht sowohl deren IP als auch deren Port aus.
