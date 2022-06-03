@@ -151,6 +151,18 @@ Opus ist eine Verlustbehaftete Kodierung, erreicht allerdings akzeptable Sprachq
 
 ![Identification](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/jatsqi/VS-P2P-Voice-Chat/master/uml/seqJoinChannel.puml&fmt=svg)
 
+Die UDP Hole-Punching Implementierung funktioniert aktuell folgendermaßen:
+
+1. Sobald sich ein Client connecten möchte, sendet der Server die Aktion `port_discovery` an den Client.
+2. Das Paket beinhaltet einen Port, zu dem sich der Client verbinden soll per UDP.
+3. In der zwischenzeit startet der Server ein UDP Socket und bindet es an den übermittelten Port.
+4. Der Client sendet ein UDP Paket an den Server.
+5. Sobald der Server dies liest, kennt er sowohl IP, als auch den durch das NAT bereitgestellten Port des Client, sofern dieser hinter einem NAT liegt. Nutzt der Client kein NAT, so kennt er den "echten" Port, vondem aus der Client gesendet hat.
+6. Der Server sendet IP + Port an den anderen sich im Channel befindlichen Client und schickt an den neuen Client IP + Port des jeweils anderen.
+7. Beide Clients können nun miteinander per UDP kommunizieren => Löcher wurden in das NAT geschlagen.
+
+**ACHTUNG**: DIES FUNKTIONIERT **NICHT** BEI SYMETRISCHEN NATS, DA DER EINTRAG IN DER NAT TABELLE HIER NUR FÜR DEN SERVER GÜLTIG IST, ZU DEM DAS URSPRÜNGLICHE PAKET GESENDET WZRDE
+
 
 ## Kurzbeschreibung der Source-Dateien
 
