@@ -50,7 +50,7 @@ qint64 CVoiceClient::writeData(const char *data, qint64 len)
             destination = m_MetadataClient->host();
 
         // Sende Daten an anderen Client
-        m_Socket->writeDatagram(output, a.host, a.port);
+        m_Socket->writeDatagram(output, destination, a.port);
     }
 
     return len;
